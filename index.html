@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl" id="htmlRoot">
 <head>
@@ -64,12 +65,16 @@
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
         }
         .header-logo {
-            font-size: 1.15rem; font-weight: 900; letter-spacing: -0.5px;
+            font-size: 1.2rem; font-weight: 900; letter-spacing: -0.5px;
             display: flex; align-items: center; gap: 10px;
         }
-        .logo-word { font-size: 1.22rem; line-height: 1; letter-spacing: -0.3px; }
-        .logo-divider { color: rgba(255,255,255,0.28); font-weight: 300; font-size: 1.1rem; margin: 0 1px; }
-        .logo-tool { color: rgba(255,255,255,0.7); font-size: 0.8rem; font-weight: 600; }
+        .header-logo-icon {
+            width: 34px; height: 34px; border-radius: 9px;
+            background: linear-gradient(135deg, var(--accent), #0099ff);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1rem; box-shadow: 0 0 14px var(--accent-glow);
+        }
+        .header-logo span { color: var(--accent); }
         .header-right { display: flex; align-items: center; gap: 10px; }
         .header-version {
             background: rgba(255,255,255,0.1);
@@ -159,6 +164,24 @@
             background: var(--bg-deep); border-radius: 20px;
             padding: 3px 10px; font-weight: 600;
         }
+        .api-key-container {
+            margin-bottom: 14px;
+            background: rgba(255,255,255,0.7);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #c3e0ff;
+        }
+        .api-key-input {
+            width: 100%; border: 1.5px solid var(--border); border-radius: 6px;
+            padding: 6px 10px; font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+            outline: none;
+        }
+        .api-key-input:focus { border-color: var(--accent); }
+        .api-key-hint {
+            font-size: 0.65rem; color: var(--text-mid); margin-top: 5px;
+            display: flex; justify-content: space-between;
+        }
+        .api-key-hint a { color: var(--primary-light); font-weight: 700; text-decoration: none; }
         .scan-drop-zone {
             border: 2px dashed #b3d4f7; border-radius: 10px;
             padding: 20px; text-align: center; cursor: pointer;
@@ -176,15 +199,9 @@
             margin-top: 12px; border-radius: 10px; padding: 12px 14px;
             display: flex; align-items: flex-start; gap: 10px; display: none;
         }
-        .scan-status.scanning {
-            display: flex; background: #f0f9ff; border: 1px solid #bae6fd;
-        }
-        .scan-status.success {
-            display: flex; background: var(--scan-green-bg); border: 1px solid #a7f3d0;
-        }
-        .scan-status.error {
-            display: flex; background: #fff5f5; border: 1px solid #fca5a5;
-        }
+        .scan-status.scanning { display: flex; background: #f0f9ff; border: 1px solid #bae6fd; }
+        .scan-status.success { display: flex; background: var(--scan-green-bg); border: 1px solid #a7f3d0; }
+        .scan-status.error { display: flex; background: #fff5f5; border: 1px solid #fca5a5; }
         .scan-spinner {
             width: 18px; height: 18px; border-radius: 50%;
             border: 2.5px solid #bae6fd; border-top-color: var(--accent);
@@ -245,9 +262,7 @@
         .flight-chip-info { flex: 1; }
         .flight-chip-route { font-size: 0.8rem; font-weight: 800; color: var(--primary); }
         .flight-chip-detail { font-size: 0.68rem; color: var(--text-mid); margin-top: 1px; }
-        .flight-chip-dir {
-            font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px;
-        }
+        .flight-chip-dir { font-size: 0.65rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
         .dir-ob { background: #dbeafe; color: #1d4ed8; }
         .dir-ib { background: #fef3c7; color: #92400e; }
 
@@ -294,16 +309,12 @@
             transition: border-color 0.2s, box-shadow 0.2s, background 0.2s; outline: none;
         }
         input[type="number"] { -moz-appearance: textfield; }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+        input[type="number"]::-webkit-inner-spin-button, input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
         input:focus, select:focus {
             border-color: var(--accent); background: #fff;
             box-shadow: 0 0 0 3px var(--accent-glow);
         }
-        input.auto-filled {
-            border-color: var(--scan-green);
-            background: #f0fff8;
-        }
+        input.auto-filled { border-color: var(--scan-green); background: #f0fff8; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
         /* ── PAX ROWS ── */
@@ -314,8 +325,7 @@
         }
         .pax-row {
             background: var(--input-bg); border: 1.5px solid var(--border-light);
-            border-radius: 11px; padding: 14px; margin-bottom: 10px;
-            transition: border-color 0.2s;
+            border-radius: 11px; padding: 14px; margin-bottom: 10px; transition: border-color 0.2s;
         }
         .pax-row:hover { border-color: var(--border); }
         .pax-row-header {
@@ -369,9 +379,8 @@
         .hidden-section { display: none; margin-top: 18px; }
         .divider { border: none; border-top: 2px dashed #cbd5e1; margin: 18px 0; }
         .result-card {
-            background: white; border-radius: 14px;
-            border: 1px solid var(--border-light); overflow: hidden; margin-bottom: 14px;
-            box-shadow: 0 2px 10px rgba(10,36,99,0.05);
+            background: white; border-radius: 14px; border: 1px solid var(--border-light);
+            overflow: hidden; margin-bottom: 14px; box-shadow: 0 2px 10px rgba(10,36,99,0.05);
         }
         .result-card-header {
             background: linear-gradient(135deg, var(--primary), var(--primary-mid));
@@ -408,29 +417,10 @@
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
     <div class="header-logo">
-        <!-- Almosafer SVG logo mark -->
-        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
-            <rect width="36" height="36" rx="9" fill="url(#lgrad)"/>
-            <defs>
-                <linearGradient id="lgrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stop-color="#00c4e8"/>
-                    <stop offset="100%" stop-color="#0072ff"/>
-                </linearGradient>
-            </defs>
-            <!-- Stylised plane / A mark -->
-            <path d="M8 24 L18 10 L28 24" stroke="white" stroke-width="2.5" stroke-linejoin="round" fill="none"/>
-            <path d="M11.5 20 L24.5 20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-            <circle cx="18" cy="10" r="2" fill="white"/>
-        </svg>
-        <!-- Almosafer wordmark — always Latin, matches brand in AR & EN -->
-        <span class="logo-word">
-            <span style="color:white;font-weight:900;letter-spacing:-0.5px;">al</span><span style="color:var(--accent);font-weight:900;letter-spacing:-0.5px;">mosafer</span>
-        </span>
-        <span class="logo-divider">|</span>
-        <span class="logo-tool" id="logoToolLabel">أداة الخدمات</span>
+        <div class="header-logo-icon">✈</div>
+        Al<span>Mosafer</span> Services Tool
     </div>
     <div class="header-right">
         <div class="lang-toggle" onclick="toggleLang()">
@@ -442,10 +432,8 @@
 </div>
 
 <div class="wrapper">
-    <!-- ═══════════ SIDEBAR ═══════════ -->
     <div>
 
-        <!-- TICKET SCANNER -->
         <div class="ticket-scanner-card" id="scannerCard">
             <div class="scanner-header">
                 <div class="scanner-label">
@@ -453,6 +441,14 @@
                     <span class="scanner-badge">AI</span>
                 </div>
                 <span class="scanner-optional" data-ar="اختياري" data-en="Optional">اختياري</span>
+            </div>
+
+            <div class="api-key-container">
+                <input type="password" id="geminiApiKey" class="api-key-input" placeholder="Enter Free Gemini API Key" onchange="saveApiKey()">
+                <div class="api-key-hint">
+                    <span data-ar="مفتاح API الخاص بك جاهز" data-en="Your API Key is Ready">مفتاح API الخاص بك مدمج وجاهز</span>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" data-ar="احصل على مفتاح جديد" data-en="Get a new key">احصل على مفتاح جديد</a>
+                </div>
             </div>
 
             <div class="scan-drop-zone" id="scanDropZone"
@@ -470,18 +466,15 @@
                 <div class="scan-status-text" id="scanStatusText"></div>
             </div>
 
-            <!-- TICKET INFO PANEL -->
             <div class="ticket-info-panel" id="ticketInfoPanel">
                 <div class="ticket-panel-header">
                     <span>📋 <span data-ar="معلومات التذكرة" data-en="Ticket Information">معلومات التذكرة</span></span>
                     <button class="ticket-clear-btn" onclick="clearTicket()" data-ar="مسح" data-en="Clear">مسح</button>
                 </div>
                 <div class="ticket-panel-body">
-                    <!-- Flights -->
                     <div class="flights-section-label" data-ar="اختر الرحلة / الرحلات" data-en="Select Flight(s)">اختر الرحلة / الرحلات</div>
                     <div class="flights-grid" id="flightChipsContainer"></div>
 
-                    <!-- Passengers -->
                     <div class="pax-chips-label" data-ar="اختر المسافرين" data-en="Select Passengers">اختر المسافرين</div>
                     <div class="pax-chips" id="paxChipsContainer"></div>
 
@@ -492,7 +485,6 @@
             </div>
         </div>
 
-        <!-- Section 1: Service Info -->
         <div class="card">
             <div class="card-header">
                 <div class="card-icon icon-blue">✈️</div>
@@ -550,7 +542,6 @@
             </div>
         </div>
 
-        <!-- Section 2: Service Details -->
         <div class="card">
             <div class="card-header">
                 <div class="card-icon icon-orange">📋</div>
@@ -560,10 +551,9 @@
                 </div>
             </div>
 
-            <!-- Baggage Fields -->
             <div id="baggageFields">
                 <label class="required" data-ar="وزن الحقيبة (كجم)" data-en="Bag Weight (KG)">وزن الحقيبة (كجم)</label>
-                <input type="number" id="bagWeight" value="23" min="1" oninput="calculate()" onwheel="event.preventDefault()" onkeydown="if(event.key==='ArrowUp'||event.key==='ArrowDown')event.preventDefault()">
+                <input type="number" id="bagWeight" value="23" min="1" oninput="calculate()" onwheel="event.preventDefault()">
                 <div id="bagOW_label">
                     <label class="required" id="bagPriceLabel" data-ar="إجمالي سعر الطيران لجميع المسافرين" data-en="Total Airline Price (All Pax)">إجمالي سعر الطيران لجميع المسافرين</label>
                     <input type="number" id="airlinePrice" placeholder="0.00" oninput="calculate()" onwheel="event.preventDefault()">
@@ -574,7 +564,6 @@
                 </div>
             </div>
 
-            <!-- Seat Fields -->
             <div id="seatGlobalFields" style="display:none;">
                 <div id="seatOW_label">
                     <label class="required" id="seatPriceLabel" data-ar="إجمالي سعر الطيران لجميع المقاعد" data-en="Total Airline Price (All Seats)">إجمالي سعر الطيران لجميع المقاعد</label>
@@ -586,7 +575,6 @@
                 </div>
             </div>
 
-            <!-- Meal Fields -->
             <div id="mealGlobalFields" style="display:none;">
                 <div style="background:#f0f9ff;border-radius:10px;padding:12px;margin-bottom:4px;">
                     <div style="font-weight:800;color:var(--primary);margin-bottom:8px;font-size:0.82rem;">🛫 <span data-ar="ذهاب" data-en="Outbound">ذهاب</span></div>
@@ -603,7 +591,6 @@
             <div id="paxRowsContainer" class="pax-section" style="margin-top:14px;"></div>
         </div>
 
-        <!-- Section 3: No-Show -->
         <div class="card">
             <div class="card-header">
                 <div class="card-icon icon-red">⏱️</div>
@@ -630,7 +617,6 @@
         <button class="btn btn-reset" onclick="resetAll()" data-ar="🔄 إعادة تعيين جميع البيانات" data-en="🔄 Reset All Data">🔄 إعادة تعيين جميع البيانات</button>
     </div>
 
-    <!-- ═══════════ CONTENT AREA ═══════════ -->
     <div>
         <div class="card">
             <div id="waitingMsg" class="waiting-msg">
@@ -639,7 +625,6 @@
             </div>
 
             <div id="calcResults" style="display:none;">
-                <!-- QUOTE SECTION -->
                 <div id="quoteSection">
                     <div class="section-title">📤 <span data-ar="عرض السعر للعميل" data-en="Customer Quote">عرض السعر للعميل</span></div>
 
@@ -662,7 +647,6 @@
                     <button id="acceptBtn" class="btn btn-accept" onclick="showHiddenDetails()" data-ar="✅ العميل وافق على الرسوم – اعرض التأكيد" data-en="✅ Customer Accepted – Show Confirmation">✅ العميل وافق على الرسوم – اعرض التأكيد</button>
                 </div>
 
-                <!-- DETAILS SECTION -->
                 <div id="detailsSection" class="hidden-section animate-in">
                     <hr class="divider">
                     <div class="section-title">🔒 Internal Log</div>
@@ -705,6 +689,18 @@
     let currentLang = 'ar';
     let ticketData = null; // Parsed ticket info
 
+    // ─── INIT API KEY ─────────────────────────────────────────────
+    // HARDCODED DEFAULT KEY FROM USER
+    const defaultKey = "AIzaSyBt-SksewOJwrVcxn3MLWdebvH3nVC_wzI";
+    
+    // Check if the user ever typed a different key, otherwise use the default one
+    const savedKey = localStorage.getItem('gemini_api_key');
+    document.getElementById('geminiApiKey').value = savedKey || defaultKey;
+
+    function saveApiKey() {
+        localStorage.setItem('gemini_api_key', document.getElementById('geminiApiKey').value);
+    }
+
     // ─── LANGUAGE ─────────────────────────────────────────────────
     function toggleLang() {
         currentLang = currentLang === 'ar' ? 'en' : 'ar';
@@ -719,7 +715,6 @@
         document.getElementById('langAr').classList.toggle('active', isAr);
         document.getElementById('langEn').classList.toggle('active', !isAr);
         document.getElementById('toast').innerText = isAr ? '✅ تم النسخ!' : '✅ Copied!';
-        document.getElementById('logoToolLabel').innerText = isAr ? 'أداة الخدمات' : 'Services Tool';
         document.querySelectorAll('[data-ar]').forEach(el => {
             const txt = isAr ? el.getAttribute('data-ar') : el.getAttribute('data-en');
             if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = txt;
@@ -863,595 +858,4 @@
                     `;
                 } else {
                     row.innerHTML = `
-                        <div class="pax-row-header"><span class="pax-badge">${i}</span> ${t('المسافر رقم','Passenger #')} ${i}</div>
-                        <label>${t('اسم المسافر','Passenger Name')}</label>
-                        <input type="text" id="pax_name_${i}" placeholder="${t('الاسم الكامل','Full name')}" oninput="calculate()">
-                        <label>${t('اسم الوجبة','Meal Name')}</label>
-                        <input type="text" id="meal_name_${i}" placeholder="${t('مثال: وجبة نباتية','e.g. Vegetarian')}" oninput="calculate()">
-                    `;
-                }
-            }
-            container.appendChild(row);
-        }
-        calculate();
-    }
-
-    // ─── CALCULATE ────────────────────────────────────────────────
-    function calculate() {
-        const service  = document.getElementById('serviceType').value;
-        const nsVal    = document.getElementById('nsValue').value;
-        const pax      = parseInt(document.getElementById('paxCount').value) || 1;
-        const country  = document.getElementById('posCountry').value;
-        const route    = document.getElementById('routeType').value;
-        const nsUnit   = document.getElementById('nsUnit').value;
-        const vat      = document.getElementById('vatOption') ? document.getElementById('vatOption').value : 'N';
-        const nsUnitEn = nsUnit === 'ساعه' ? 'hours' : 'minutes';
-        const nsUnitAr = nsUnit === 'ساعه' ? 'ساعة' : 'دقيقة';
-        const pnrType  = document.getElementById('pnrType').value;
-        const isRT     = (route === 'RT' && service !== 'CheckIn');
-        const isMulti  = (isRT && pnrType === 'multi');
-
-        let airlineTotalOB = 0, airlineTotalIB = 0;
-        if (service === 'Baggage') {
-            airlineTotalOB = parseFloat(document.getElementById('airlinePrice').value) || 0;
-            airlineTotalIB = isRT ? (parseFloat(document.getElementById('airlinePriceInbound').value) || 0) : 0;
-        } else if (service === 'Seat') {
-            airlineTotalOB = parseFloat(document.getElementById('seatAirlinePrice').value) || 0;
-            airlineTotalIB = isRT ? (parseFloat(document.getElementById('seatAirlinePriceInbound').value) || 0) : 0;
-        } else if (service === 'Meal') {
-            airlineTotalOB = parseFloat(document.getElementById('mealAirlinePrice').value) || 0;
-            airlineTotalIB = isRT ? (parseFloat(document.getElementById('mealAirlinePriceInbound').value) || 0) : 0;
-        }
-
-        const needsPrice = service !== 'CheckIn';
-        const ready = nsVal && (!needsPrice || airlineTotalOB > 0);
-
-        document.getElementById('waitingMsg').style.display  = ready ? 'none' : 'block';
-        document.getElementById('calcResults').style.display = ready ? 'block' : 'none';
-        if (!ready) return;
-
-        document.getElementById('detailsSection').style.display = 'none';
-        document.getElementById('acceptBtn').style.display = 'block';
-
-        // Fees
-        let mosFee = 0, currency = '';
-        if (service === 'CheckIn') {
-            const data = checkInFeesTable[country] || checkInFeesTable['INT'];
-            currency = data.curr;
-            const rk = route === 'OW' ? 'ow' : 'rt';
-            const vatKey = (country === 'KSA_DOM' || country === 'KSA_INT') ? 'Y' : 'N';
-            mosFee = data[vatKey][rk];
-        } else {
-            const data = feesTable[country];
-            currency = data.curr;
-            mosFee = route === 'OW' ? data.ow : data.rt;
-        }
-
-        const currencyAr = currencyArMap[currency] || currency;
-
-        let totalAirlineOB = 0, totalAirlineIB = 0, totalAirline = 0, totalMosFee = 0, subTotal = 0;
-        if (service === 'CheckIn') {
-            totalMosFee  = mosFee * pax;
-            subTotal     = totalMosFee;
-        } else if (isMulti) {
-            totalAirlineOB = airlineTotalOB;
-            totalAirlineIB = airlineTotalIB;
-            totalAirline   = totalAirlineOB + totalAirlineIB;
-            totalMosFee    = mosFee * 2;
-            subTotal       = totalAirline + totalMosFee;
-        } else if (isRT) {
-            totalAirlineOB = airlineTotalOB;
-            totalAirlineIB = airlineTotalIB;
-            totalAirline   = totalAirlineOB + totalAirlineIB;
-            totalMosFee    = mosFee;
-            subTotal       = totalAirline + totalMosFee;
-        } else {
-            totalAirline = airlineTotalOB;
-            totalMosFee  = mosFee;
-            subTotal     = totalAirline + totalMosFee;
-        }
-        const grandTotal = subTotal;
-
-        const paxNames = [], seatNums = [], seatOBNums = [], seatIBNums = [];
-        const zones = [], mealNames = [], mealOBNames = [], mealIBNames = [];
-        for (let i = 1; i <= pax; i++) {
-            const nameEl = document.getElementById(`pax_name_${i}`);
-            paxNames.push(nameEl ? (nameEl.value.trim() || t(`مسافر ${i}`, `Pax ${i}`)) : t(`مسافر ${i}`, `Pax ${i}`));
-            if (service === 'Seat') {
-                if (isRT) {
-                    const obEl = document.getElementById(`seat_ob_${i}`);
-                    const ibEl = document.getElementById(`seat_ib_${i}`);
-                    seatOBNums.push(obEl ? (obEl.value.trim() || '?') : '?');
-                    seatIBNums.push(ibEl ? (ibEl.value.trim() || '?') : '?');
-                } else {
-                    const sEl = document.getElementById(`seat_num_${i}`);
-                    seatNums.push(sEl ? (sEl.value.trim() || '?') : '?');
-                }
-            }
-            if (service === 'Baggage') {
-                const zEl = document.getElementById(`pax_zone_${i}`);
-                zones.push(zEl ? (zEl.value.trim() || '-') : '-');
-            }
-            if (service === 'Meal') {
-                if (isRT) {
-                    const obEl = document.getElementById(`meal_ob_${i}`);
-                    const ibEl = document.getElementById(`meal_ib_${i}`);
-                    mealOBNames.push(obEl ? (obEl.value.trim() || t('وجبة','Meal')) : t('وجبة','Meal'));
-                    mealIBNames.push(ibEl ? (ibEl.value.trim() || t('وجبة','Meal')) : t('وجبة','Meal'));
-                } else {
-                    const mEl = document.getElementById(`meal_name_${i}`);
-                    mealNames.push(mEl ? (mEl.value.trim() || t('وجبة','Meal')) : t('وجبة','Meal'));
-                }
-            }
-        }
-
-        const weightOB  = document.getElementById('bagWeight') ? document.getElementById('bagWeight').value : '';
-        const weightIB  = document.getElementById('bagWeightInbound') ? document.getElementById('bagWeightInbound').value : weightOB;
-        const weightAr  = isRT ? `ذهاب: ${weightOB} كجم | عودة: ${weightIB} كجم` : `${weightOB} كجم`;
-        const weightEn  = isRT ? `Outbound: ${weightOB} KG | Inbound: ${weightIB} KG` : `${weightOB} KG`;
-        const pnrLabelAr = isMulti ? 'حجزين منفصلين' : 'حجز واحد';
-        const pnrLabelEn = isMulti ? 'Multi PNR (2 separate bookings)' : 'Single PNR';
-
-        let airlineBreakAr, airlineBreakEn;
-        if (isRT) {
-            airlineBreakAr = `  🛫 ذهاب: ${totalAirlineOB.toFixed(2)} ${currencyAr}\n  🛬 عودة: ${totalAirlineIB.toFixed(2)} ${currencyAr}\n  إجمالي رسوم الطيران: ${totalAirline.toFixed(2)} ${currencyAr}`;
-            airlineBreakEn = `  🛫 Outbound: ${totalAirlineOB.toFixed(2)} ${currency}\n  🛬 Inbound:  ${totalAirlineIB.toFixed(2)} ${currency}\n  Airline fees total: ${totalAirline.toFixed(2)} ${currency}`;
-        } else {
-            airlineBreakAr = `إجمالي رسوم الطيران: ${totalAirline.toFixed(2)} ${currencyAr}`;
-            airlineBreakEn = `Airline fees total: ${totalAirline.toFixed(2)} ${currency}`;
-        }
-
-        const mosFeeLineAr = isMulti
-            ? `رسوم شركة المسافر: ${mosFee} ${currencyAr} × 2 = ${totalMosFee.toFixed(2)} ${currencyAr}`
-            : `رسوم شركة المسافر: ${totalMosFee.toFixed(2)} ${currencyAr}`;
-        const mosFeeLineEn = isMulti
-            ? `Almosafer fees: ${mosFee} ${currency} × 2 = ${totalMosFee.toFixed(2)} ${currency}`
-            : `Almosafer fees: ${totalMosFee.toFixed(2)} ${currency}`;
-
-        let qAr = '', qEn = '';
-
-        if (service === 'Baggage') {
-            const paxLinesAr = paxNames.map((n,i) => `• ${n} – الوزن المضاف: ${zones[i]} كجم`).join('\n');
-            const paxLinesEn = paxNames.map((n,i) => `• ${n} – Added weight: ${zones[i]} KG`).join('\n');
-            qAr = `برجاء العلم أن رسوم إضافة حقيبة بوزن ${weightAr} لعدد ${pax} مسافرين هي:\n\nالمسافرون:\n${paxLinesAr}\n\n${airlineBreakAr}\n${mosFeeLineAr}\nالمبلغ الإجمالي: ${grandTotal.toFixed(2)} ${currencyAr}\nمع العلم أن السعر والإمكانية غير ثابتين، كذلك يرجى العلم أن إضافة الأمتعة تكون متاحة من قبل خط الطيران قبل ${nsVal} ${nsUnitAr} من وقت الإقلاع.`;
-            qEn = `Please note that to add an extra bag with ${weightEn} for ${pax} pax, fees are as follows:\n\nPassengers:\n${paxLinesEn}\n\n${airlineBreakEn}\n${mosFeeLineEn}\nTotal amount: ${grandTotal.toFixed(2)} ${currency}\nPlease note the price and availability are not guaranteed. The airline allows adding baggage up to ${nsVal} ${nsUnitEn} before departure.`;
-        } else if (service === 'Seat') {
-            let seatLinesAr, seatLinesEn;
-            if (isRT) {
-                const obLinesAr = paxNames.map((n,i) => `  • ${n} – مقعد ${seatOBNums[i]}`).join('\n');
-                const ibLinesAr = paxNames.map((n,i) => `  • ${n} – مقعد ${seatIBNums[i]}`).join('\n');
-                seatLinesAr = `🛫 ذهاب:\n${obLinesAr}\n🛬 عودة:\n${ibLinesAr}`;
-                const obLinesEn = paxNames.map((n,i) => `  • ${n} – Seat ${seatOBNums[i]}`).join('\n');
-                const ibLinesEn = paxNames.map((n,i) => `  • ${n} – Seat ${seatIBNums[i]}`).join('\n');
-                seatLinesEn = `🛫 Outbound:\n${obLinesEn}\n🛬 Inbound:\n${ibLinesEn}`;
-            } else {
-                seatLinesAr = seatNums.map((s,i) => `• مقعد ${s} – ${paxNames[i]}`).join('\n');
-                seatLinesEn = seatNums.map((s,i) => `• Seat ${s} – ${paxNames[i]}`).join('\n');
-            }
-            qAr = `رسوم اختيار المقاعد لعدد ${pax} مسافرين:\n\nالمقاعد والمسافرون:\n${seatLinesAr}\n\n${airlineBreakAr}\n${mosFeeLineAr}\nإجمالي المبلغ: ${grandTotal.toFixed(2)} ${currencyAr}\nمع العلم أن السعر والإمكانية غير ثابتين، كذلك يرجى العلم أن اختيار المقاعد يكون متاحاً من قبل خط الطيران قبل ${nsVal} ${nsUnitAr} من وقت الإقلاع.`;
-            qEn = `Seat selection fees for ${pax} pax:\n\nSeats & Passengers:\n${seatLinesEn}\n\n${airlineBreakEn}\n${mosFeeLineEn}\nTotal amount: ${grandTotal.toFixed(2)} ${currency}\nPlease note the price and availability are not guaranteed. The airline allows seat selection up to ${nsVal} ${nsUnitEn} before departure.`;
-        } else if (service === 'Meal') {
-            let mealLinesAr, mealLinesEn;
-            if (isRT) {
-                const obMAr = paxNames.map((n,i) => `  • ${n} – ${mealOBNames[i]}`).join('\n');
-                const ibMAr = paxNames.map((n,i) => `  • ${n} – ${mealIBNames[i]}`).join('\n');
-                mealLinesAr = `🛫 ذهاب:\n${obMAr}\n🛬 عودة:\n${ibMAr}`;
-                const obMEn = paxNames.map((n,i) => `  • ${n} – ${mealOBNames[i]}`).join('\n');
-                const ibMEn = paxNames.map((n,i) => `  • ${n} – ${mealIBNames[i]}`).join('\n');
-                mealLinesEn = `🛫 Outbound:\n${obMEn}\n🛬 Inbound:\n${ibMEn}`;
-            } else {
-                mealLinesAr = paxNames.map((n,i) => `• ${n} – ${mealNames[i]}`).join('\n');
-                mealLinesEn = paxNames.map((n,i) => `• ${n} – ${mealNames[i]}`).join('\n');
-            }
-            qAr = `برجاء العلم أن رسوم اختيار الوجبة لعدد ${pax} مسافرين:\n\nالمسافرون والوجبات:\n${mealLinesAr}\n\n${airlineBreakAr}\n${mosFeeLineAr}\nالمبلغ الإجمالي: ${grandTotal.toFixed(2)} ${currencyAr}\nمع العلم أن السعر والإمكانية غير ثابتين، كذلك يرجى العلم أن إضافة الوجبة تكون متاحة من قبل خط الطيران قبل ${nsVal} ${nsUnitAr} من وقت الإقلاع.`;
-            qEn = `Please note the meal selection fees for ${pax} pax:\n\nPassengers & Meals:\n${mealLinesEn}\n\n${airlineBreakEn}\n${mosFeeLineEn}\nTotal amount: ${grandTotal.toFixed(2)} ${currency}\nPlease note the price and availability are not guaranteed. The airline allows adding meals up to ${nsVal} ${nsUnitEn} before departure.`;
-        } else if (service === 'CheckIn') {
-            qAr = `بخصوص إصدار بطاقة الصعود من خلالنا لعدد ${pax} مسافرين، الرسوم هي ${totalMosFee.toFixed(2)} ${currencyAr}.\nاختيار المقاعد سوف يكون بشكل عشوائي لكي يكون مجاناً.`;
-            qEn = `Regarding issuing the boarding pass through us for ${pax} pax, the fee is ${totalMosFee.toFixed(2)} ${currency}.\nSeats will be assigned randomly to remain free of charge.`;
-        }
-
-        document.getElementById('quoteAr').innerText = qAr;
-        document.getElementById('quoteEn').innerText = qEn;
-
-        // Internal Log
-        let paxDetail = '';
-        if (service === 'Baggage') paxDetail = paxNames.map((n,i) => `  - ${n} | ${zones[i]} KG`).join('\n');
-        if (service === 'Seat') {
-            if (isRT) paxDetail = paxNames.map((n,i) => `  - ${n} | OB: ${seatOBNums[i]} | IB: ${seatIBNums[i]}`).join('\n');
-            else paxDetail = seatNums.map((s,i) => `  - Seat ${s}: ${paxNames[i]}`).join('\n');
-        }
-        if (service === 'Meal') {
-            if (isRT) paxDetail = paxNames.map((n,i) => `  - ${n} | OB: ${mealOBNames[i]} | IB: ${mealIBNames[i]}`).join('\n');
-            else paxDetail = paxNames.map((n,i) => `  - ${n}: ${mealNames[i]}`).join('\n');
-        }
-
-        const serviceLogName = service === 'Seat' ? 'select seat' : service === 'Meal' ? 'select meal' : service === 'CheckIn' ? 'check in' : 'add bag';
-        const pnrLogLabel    = isMulti ? ' | PNR: Multi' : '';
-        document.getElementById('internalLog').innerText =
-            `cx asked to ${serviceLogName}\n` +
-            `Pax: ${pax} | Route: ${route}${pnrLogLabel}\n` +
-            (paxDetail ? `Pax Details:\n${paxDetail}\n` : '') +
-            `\n` + (isMulti
-                ? `airline OB total: ${totalAirlineOB.toFixed(2)} ${currency}\nairline IB total: ${totalAirlineIB.toFixed(2)} ${currency}\n`
-                : `airline total: ${totalAirline.toFixed(2)} ${currency}\n`) +
-            `mos fees (${isMulti ? 'x2 multi PNR' : 'fixed'}): ${totalMosFee.toFixed(2)} ${currency}\n` +
-            `grand total: ${grandTotal.toFixed(2)} ${currency}\n\npl sent`;
-
-        const serviceNamesAr = { Baggage: 'إضافة حقيبة', Seat: 'اختيار مقاعد', Meal: 'اختيار وجبة', CheckIn: 'إنهاء إجراءات السفر' };
-        const serviceNamesEn = { Baggage: 'Extra Baggage', Seat: 'Seat Selection', Meal: 'Meal Selection', CheckIn: 'Check-in' };
-        const routeAr = route === 'OW' ? 'اتجاه واحد' : 'ذهاب وعودة';
-        const routeEn = route === 'OW' ? 'One Way' : 'Return';
-        const weightOB2 = document.getElementById('bagWeight') ? document.getElementById('bagWeight').value : '';
-        const weightIB2 = document.getElementById('bagWeightInbound') ? document.getElementById('bagWeightInbound').value : weightOB2;
-        const pnrSuffix = isMulti ? ' – Multi PNR' : '';
-
-        let confirmPaxAr = '', confirmPaxEn = '';
-        if (service === 'Baggage') {
-            if (isRT) {
-                confirmPaxAr = `🛫 ذهاب:\n${paxNames.map((n,i)=>`• ${n} – الوزن المضاف: ${weightOB2} كجم`).join('\n')}\n🛬 عودة:\n${paxNames.map((n,i)=>`• ${n} – الوزن المضاف: ${weightIB2} كجم`).join('\n')}`;
-                confirmPaxEn = `🛫 Outbound:\n${paxNames.map((n,i)=>`• ${n} – Weight added: ${weightOB2} KG`).join('\n')}\n🛬 Inbound:\n${paxNames.map((n,i)=>`• ${n} – Weight added: ${weightIB2} KG`).join('\n')}`;
-            } else {
-                confirmPaxAr = paxNames.map((n,i)=>`• ${n} – الوزن المضاف: ${weightOB2} كجم`).join('\n');
-                confirmPaxEn = paxNames.map((n,i)=>`• ${n} – Weight added: ${weightOB2} KG`).join('\n');
-            }
-        } else if (service === 'Seat') {
-            if (isRT) {
-                confirmPaxAr = `🛫 ذهاب:\n${paxNames.map((n,i)=>`• ${n} – مقعد ${seatOBNums[i]}`).join('\n')}\n🛬 عودة:\n${paxNames.map((n,i)=>`• ${n} – مقعد ${seatIBNums[i]}`).join('\n')}`;
-                confirmPaxEn = `🛫 Outbound:\n${paxNames.map((n,i)=>`• ${n} – Seat ${seatOBNums[i]}`).join('\n')}\n🛬 Inbound:\n${paxNames.map((n,i)=>`• ${n} – Seat ${seatIBNums[i]}`).join('\n')}`;
-            } else {
-                confirmPaxAr = seatNums.map((s,i)=>`• ${paxNames[i]} – مقعد ${s}`).join('\n');
-                confirmPaxEn = seatNums.map((s,i)=>`• ${paxNames[i]} – Seat ${s}`).join('\n');
-            }
-        } else if (service === 'Meal') {
-            if (isRT) {
-                confirmPaxAr = `🛫 ذهاب:\n${paxNames.map((n,i)=>`• ${n} – ${mealOBNames[i]}`).join('\n')}\n🛬 عودة:\n${paxNames.map((n,i)=>`• ${n} – ${mealIBNames[i]}`).join('\n')}`;
-                confirmPaxEn = `🛫 Outbound:\n${paxNames.map((n,i)=>`• ${n} – ${mealOBNames[i]}`).join('\n')}\n🛬 Inbound:\n${paxNames.map((n,i)=>`• ${n} – ${mealIBNames[i]}`).join('\n')}`;
-            } else {
-                confirmPaxAr = paxNames.map((n,i)=>`• ${n} – ${mealNames[i]}`).join('\n');
-                confirmPaxEn = paxNames.map((n,i)=>`• ${n} – ${mealNames[i]}`).join('\n');
-            }
-        } else if (service === 'CheckIn') {
-            confirmPaxAr = paxNames.map(n=>`• ${n}`).join('\n');
-            confirmPaxEn = paxNames.map(n=>`• ${n}`).join('\n');
-        }
-
-        document.getElementById('confirmAr').innerText =
-`تفاصيل الطلب:
-─────────────────────────
-الخدمة: ${serviceNamesAr[service]}
-المسار: ${routeAr}${pnrSuffix}
-عدد المسافرين: ${pax}
-
-المسافرون:
-${confirmPaxAr}
-
-الإجمالي: ${grandTotal.toFixed(2)} ${currencyAr}
-هل تريد تأكيد الطلب والمتابعة؟`;
-
-        document.getElementById('confirmEn').innerText =
-`Request Details:
-─────────────────────────
-Service: ${serviceNamesEn[service]}
-Route: ${routeEn}${pnrSuffix}
-Passengers: ${pax}
-
-Passengers:
-${confirmPaxEn}
-
-Total: ${grandTotal.toFixed(2)} ${currency}
-Would you like to confirm and proceed?`;
-    }
-
-    // ─── SHOW DETAILS ─────────────────────────────────────────────
-    function showHiddenDetails() {
-        document.getElementById('detailsSection').style.display = 'block';
-        document.getElementById('acceptBtn').style.display = 'none';
-        document.getElementById('detailsSection').classList.add('animate-in');
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-    }
-
-    // ─── COPY ─────────────────────────────────────────────────────
-    function copyText(id) {
-        navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => {
-            const t = document.getElementById('toast');
-            t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 2000);
-        });
-    }
-
-    // ─── RESET ────────────────────────────────────────────────────
-    function resetAll() {
-        const msg = t('هل تريد إعادة تعيين جميع البيانات؟', 'Reset all data?');
-        if (!confirm(msg)) return;
-        document.getElementById('serviceType').value  = 'Baggage';
-        document.getElementById('paxCount').value     = '1';
-        document.getElementById('posCountry').value   = 'KSA_DOM';
-        document.getElementById('routeType').value    = 'OW';
-        document.getElementById('pnrType').value      = 'single';
-        document.getElementById('pnrTypeContainer').style.display = 'none';
-        document.getElementById('nsValue').value      = '';
-        document.getElementById('nsUnit').value       = 'ساعه';
-        document.getElementById('bagWeight').value    = '23';
-        document.getElementById('airlinePrice').value = '';
-        ['bagWeightInbound','airlinePriceInbound','seatAirlinePrice','seatAirlinePriceInbound','mealAirlinePrice','mealAirlinePriceInbound'].forEach(id => {
-            const el = document.getElementById(id); if (el) el.value = '';
-        });
-        clearTicket();
-        onServiceChange();
-        document.getElementById('waitingMsg').style.display  = 'block';
-        document.getElementById('calcResults').style.display = 'none';
-    }
-
-    // ══════════════════════════════════════════════════════════════
-    // ─── TICKET SCANNER ───────────────────────────────────────────
-    // ══════════════════════════════════════════════════════════════
-
-    function onDragOver(e) {
-        e.preventDefault();
-        document.getElementById('scanDropZone').classList.add('dragover');
-    }
-    function onDragLeave(e) {
-        document.getElementById('scanDropZone').classList.remove('dragover');
-    }
-    function onDrop(e) {
-        e.preventDefault();
-        document.getElementById('scanDropZone').classList.remove('dragover');
-        const file = e.dataTransfer.files[0];
-        if (file) handleTicketFile(file);
-    }
-
-    async function handleTicketFile(file) {
-        if (!file) return;
-        setScanStatus('scanning', t('جارٍ تحليل التذكرة...', 'Analyzing ticket...'), true);
-
-        try {
-            // Convert file to base64
-            const base64Data = await fileToBase64(file);
-            const mediaType = file.type === 'application/pdf' ? 'application/pdf' : file.type;
-
-            // Call Claude API to extract ticket info
-            const result = await extractTicketInfo(base64Data, mediaType);
-            ticketData = result;
-
-            setScanStatus('success', t('✅ تم استخراج بيانات التذكرة بنجاح', '✅ Ticket data extracted successfully'), false);
-            renderTicketPanel(result);
-        } catch (err) {
-            console.error(err);
-            setScanStatus('error', t('❌ تعذر قراءة التذكرة. تحقق من الملف وحاول مجدداً.', '❌ Could not read ticket. Check the file and try again.'), false);
-        }
-    }
-
-    function fileToBase64(file) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = () => reject(new Error('File read failed'));
-            reader.readAsDataURL(file);
-        });
-    }
-
-    async function extractTicketInfo(base64Data, mediaType) {
-        const isPDF = mediaType === 'application/pdf';
-        const contentBlock = isPDF
-            ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64Data } }
-            : { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } };
-
-        const systemPrompt = `You are a ticket data extractor. Extract flight and passenger information from airline tickets/itineraries.
-Return ONLY a valid JSON object, no markdown, no code fences, no explanation.
-
-JSON schema:
-{
-  "passengers": ["Full Name 1", "Full Name 2"],
-  "flights": [
-    {
-      "id": "OB",
-      "direction": "outbound",
-      "flightNumber": "SV123",
-      "from": "RUH",
-      "to": "JED",
-      "date": "2025-06-15",
-      "departureTime": "10:00",
-      "airline": "Saudia"
-    },
-    {
-      "id": "IB",
-      "direction": "inbound",
-      "flightNumber": "SV456",
-      "from": "JED",
-      "to": "RUH",
-      "date": "2025-06-20",
-      "departureTime": "18:30",
-      "airline": "Saudia"
-    }
-  ],
-  "routeType": "RT",
-  "paxCount": 2
-}
-
-Rules:
-- routeType: "OW" for one-way, "RT" for return
-- For one-way tickets, only include one flight with direction "outbound" and id "OB"
-- For return tickets, include two flights; first is outbound (id: "OB"), second is inbound (id: "IB")
-- Extract all passenger full names exactly as printed
-- If information is missing or unclear, use null for that field
-- Return ONLY the JSON object`;
-
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'anthropic-dangerous-direct-browser-access': 'true'
-            },
-            body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 1000,
-                system: systemPrompt,
-                messages: [{
-                    role: 'user',
-                    content: [
-                        contentBlock,
-                        { type: 'text', text: 'Extract all flight and passenger information from this airline ticket.' }
-                    ]
-                }]
-            })
-        });
-
-        if (!response.ok) throw new Error(`API error ${response.status}`);
-        const data = await response.json();
-
-        const rawText = data.content.map(b => b.text || '').join('');
-        const clean = rawText.replace(/```json|```/g, '').trim();
-        return JSON.parse(clean);
-    }
-
-    function setScanStatus(type, message, showSpinner) {
-        const statusEl = document.getElementById('scanStatus');
-        const spinner  = document.getElementById('scanSpinner');
-        const icon     = document.getElementById('scanStatusIcon');
-        const text     = document.getElementById('scanStatusText');
-
-        statusEl.className = `scan-status ${type}`;
-        statusEl.style.display = 'flex';
-        spinner.style.display = showSpinner ? 'block' : 'none';
-        icon.style.display = showSpinner ? 'none' : 'block';
-
-        if (type === 'success') icon.textContent = '✅';
-        else if (type === 'error') icon.textContent = '❌';
-        else icon.textContent = '';
-
-        text.textContent = message;
-    }
-
-    function renderTicketPanel(data) {
-        if (!data) return;
-
-        // Render flight chips
-        const flightsContainer = document.getElementById('flightChipsContainer');
-        flightsContainer.innerHTML = '';
-        (data.flights || []).forEach((fl, idx) => {
-            const chip = document.createElement('div');
-            chip.className = 'flight-chip' + (idx === 0 ? ' selected' : '');
-            chip.dataset.idx = idx;
-            const isOB = fl.direction === 'outbound' || fl.id === 'OB';
-            const dirLabel = isOB
-                ? `<span class="flight-chip-dir dir-ob">${t('ذهاب','Outbound')}</span>`
-                : `<span class="flight-chip-dir dir-ib">${t('عودة','Inbound')}</span>`;
-            chip.innerHTML = `
-                <div class="flight-chip-check">${idx === 0 ? '✓' : ''}</div>
-                <div class="flight-chip-info">
-                    <div class="flight-chip-route">${fl.from || '---'} → ${fl.to || '---'} &nbsp; ${dirLabel}</div>
-                    <div class="flight-chip-detail">${fl.flightNumber || ''} ${fl.airline ? '· ' + fl.airline : ''} ${fl.date ? '· ' + fl.date : ''} ${fl.departureTime ? fl.departureTime : ''}</div>
-                </div>
-            `;
-            chip.onclick = () => toggleFlightChip(chip, idx);
-            flightsContainer.appendChild(chip);
-        });
-
-        // Select all by default if RT
-        if ((data.routeType === 'RT') && data.flights && data.flights.length > 1) {
-            flightsContainer.querySelectorAll('.flight-chip').forEach(c => {
-                c.classList.add('selected');
-                c.querySelector('.flight-chip-check').textContent = '✓';
-            });
-        }
-
-        // Render pax chips
-        const paxContainer = document.getElementById('paxChipsContainer');
-        paxContainer.innerHTML = '';
-        (data.passengers || []).forEach((name, idx) => {
-            const chip = document.createElement('div');
-            chip.className = 'pax-chip selected';
-            chip.dataset.idx = idx;
-            chip.innerHTML = `<span class="pax-chip-icon">👤</span> ${name}`;
-            chip.onclick = () => togglePaxChip(chip);
-            paxContainer.appendChild(chip);
-        });
-
-        document.getElementById('ticketInfoPanel').classList.add('visible');
-    }
-
-    function toggleFlightChip(chip, idx) {
-        chip.classList.toggle('selected');
-        chip.querySelector('.flight-chip-check').textContent = chip.classList.contains('selected') ? '✓' : '';
-    }
-
-    function togglePaxChip(chip) {
-        chip.classList.toggle('selected');
-    }
-
-    function applyTicketData() {
-        if (!ticketData) return;
-
-        // Get selected flights
-        const selectedFlightIdxs = [];
-        document.querySelectorAll('#flightChipsContainer .flight-chip.selected').forEach(c => {
-            selectedFlightIdxs.push(parseInt(c.dataset.idx));
-        });
-
-        // Get selected pax
-        const selectedPaxNames = [];
-        document.querySelectorAll('#paxChipsContainer .pax-chip.selected').forEach(c => {
-            selectedPaxNames.push(c.textContent.trim().replace('👤', '').trim());
-        });
-
-        if (selectedPaxNames.length === 0) {
-            alert(t('يرجى تحديد مسافر واحد على الأقل', 'Please select at least one passenger'));
-            return;
-        }
-        if (selectedFlightIdxs.length === 0) {
-            alert(t('يرجى تحديد رحلة واحدة على الأقل', 'Please select at least one flight'));
-            return;
-        }
-
-        const selectedFlights = selectedFlightIdxs.map(i => ticketData.flights[i]);
-        const hasOutbound = selectedFlights.some(f => f.direction === 'outbound' || f.id === 'OB');
-        const hasInbound  = selectedFlights.some(f => f.direction === 'inbound'  || f.id === 'IB');
-        const isRT = hasOutbound && hasInbound;
-
-        // Set pax count
-        document.getElementById('paxCount').value = selectedPaxNames.length;
-
-        // Set route type
-        document.getElementById('routeType').value = isRT ? 'RT' : 'OW';
-        onRouteChange();
-
-        // Build pax rows first
-        buildPaxRows();
-
-        // Fill pax names
-        setTimeout(() => {
-            selectedPaxNames.forEach((name, idx) => {
-                const nameEl = document.getElementById(`pax_name_${idx + 1}`);
-                if (nameEl) {
-                    nameEl.value = name;
-                    nameEl.classList.add('auto-filled');
-                    setTimeout(() => nameEl.classList.remove('auto-filled'), 3000);
-                }
-            });
-            calculate();
-
-            // Flash confirmation
-            const toast = document.getElementById('toast');
-            toast.innerText = t('✅ تم تطبيق بيانات التذكرة', '✅ Ticket data applied');
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                toast.innerText = t('✅ تم النسخ!', '✅ Copied!');
-            }, 2500);
-        }, 100);
-    }
-
-    function clearTicket() {
-        ticketData = null;
-        document.getElementById('ticketInfoPanel').classList.remove('visible');
-        document.getElementById('scanStatus').style.display = 'none';
-        document.getElementById('ticketFileInput').value = '';
-        document.getElementById('flightChipsContainer').innerHTML = '';
-        document.getElementById('paxChipsContainer').innerHTML = '';
-    }
-
-    // ─── INIT ─────────────────────────────────────────────────────
-    onServiceChange();
-</script>
-</body>
-</html>
+                        <div class="pax-row-header"><span class="pax-badge">${i}</span> ${t('المسافر رقم','Passenger #')}
