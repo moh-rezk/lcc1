@@ -637,8 +637,8 @@ html[lang=ar] [data-en] { display: none !important; }
       </div>
       <div class="pb-right">
         <div class="lang-toggle">
-          <button class="lang-btn active" id="btnAr" onclick="setLang('ar')">عربي</button>
-          <button class="lang-btn" id="btnEn" onclick="setLang('en')">English</button>
+          <button class="lang-btn active" id="btnAr" onclick="setLang('ar')" aria-pressed="true">عربي</button>
+          <button class="lang-btn" id="btnEn" onclick="setLang('en')" aria-pressed="false">English</button>
         </div>
         <div class="cur-pill-wrapper" style="position:relative;">
           <button id="curDisplay" class="cur-pill cur-pill-btn" onclick="toggleCurDropdown(event)" title="تغيير الدولة / Change Country">
@@ -777,8 +777,23 @@ html[lang=ar] [data-en] { display: none !important; }
             </button>
           </div>
 
+          <!-- Recent Inputs -->
+          <div id="recentInputsWrap" style="display:none;margin-bottom:6px;position:relative;">
+            <button onclick="toggleRecentDropdown()" id="recentDropBtn"
+              style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:#f8fafc;border:1px solid var(--border-s);border-radius:var(--radius-sm);font-family:inherit;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s;"
+              aria-haspopup="listbox" aria-expanded="false">
+              <span style="display:flex;align-items:center;gap:6px;">
+                <span>🕓</span>
+                <span data-ar>المدخلات الأخيرة</span>
+                <span data-en>Recent Inputs</span>
+              </span>
+              <span id="recentDropArrow" style="font-size:9px;transition:.2s;">▾</span>
+            </button>
+            <div id="recentDropdown" role="listbox" style="display:none;position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:100;background:var(--white);border:1px solid var(--border-s);border-radius:var(--radius-sm);box-shadow:var(--shadow-md);overflow:hidden;animation:dropIn .15s ease;"></div>
+          </div>
+
           <div id="parseStatus"></div>
-          <textarea id="rawSeg" class="ip-textarea" oninput="runAll(); detectAndGuide(this.value)"
+          <textarea id="rawSeg" class="ip-textarea" oninput="_debouncedRunAll(this.value)"
             placeholder="SV373 V 15JUN 1 JEDCMN HK1 0825 1305&#10;G9 598 | CAI/SHJ | 20 MAY 2026 | 22:25 → 02:50&#10;أو أي صيغة أخرى..." style="min-height:90px;"></textarea>
 
           <!-- Extract Flight Button -->
@@ -968,6 +983,20 @@ html[lang=ar] [data-en] { display: none !important; }
             <div id="quoteEn" class="msg-box" dir="ltr"></div>
           </div>
 
+          <!-- Copy Both + Print row -->
+          <div style="display:flex;gap:8px;margin-top:-6px;margin-bottom:2px;">
+            <button id="copyBothBtn" onclick="copyBothQuotes(this)" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;background:#f1f5f9;border:1px solid var(--border-s);border-radius:9px;font-family:inherit;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;transition:.18s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+              <span>📋</span>
+              <span data-ar>نسخ العربية + الإنجليزية</span>
+              <span data-en>Copy AR + EN</span>
+            </button>
+            <button onclick="printQuote()" style="display:flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;background:#f1f5f9;border:1px solid var(--border-s);border-radius:9px;font-family:inherit;font-size:12px;font-weight:600;color:var(--slate);cursor:pointer;transition:.18s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+              <span>🖨️</span>
+              <span data-ar>طباعة / PDF</span>
+              <span data-en>Print / PDF</span>
+            </button>
+          </div>
+
           <!-- Action row -->
           <div id="actionPanel" class="action-row">
             <button id="acceptBtn" class="btn-accept" onclick="showHiddenDetails()">
@@ -1101,14 +1130,14 @@ html[lang=ar] [data-en] { display: none !important; }
 </div>
 
 <!-- ══ PAX / FEES MODAL ══ -->
-<div id="feesOverlay" class="modal">
+<div id="feesOverlay" class="modal" role="dialog" aria-modal="true" aria-labelledby="feesModalTitle">
   <div class="modal-box">
     <div class="modal-hdr">
       <div>
-        <div class="modal-hdr-title"><span data-ar>⚙️ إعدادات الرحلة والمسافرين</span><span data-en>⚙️ Trip & Passenger Settings</span></div>
+        <div class="modal-hdr-title" id="feesModalTitle"><span data-ar>⚙️ إعدادات الرحلة والمسافرين</span><span data-en>⚙️ Trip & Passenger Settings</span></div>
         <div class="modal-hdr-sub"><span data-ar>راجع البيانات قبل المتابعة</span><span data-en>Review data before continuing</span></div>
       </div>
-      <button class="modal-close" onclick="closeFeesPanel()">✕</button>
+      <button class="modal-close" onclick="closeFeesPanel()" aria-label="Close">✕</button>
     </div>
     <div class="modal-body">
 
@@ -1130,13 +1159,24 @@ html[lang=ar] [data-en] { display: none !important; }
       <div class="modal-section">
         <div class="modal-section-lbl"><span data-ar>وقت النو شو</span><span data-en>No-Show Window</span></div>
         <div class="noshow-row">
-          <span id="nsBadge" style="font-size:11px;color:#b45309;font-weight:600;"></span>
+          <span id="nsBadge" style="font-size:11px;color:#b45309;font-weight:600;flex:1;"></span>
           <div style="display:flex;align-items:center;gap:6px;">
             <input type="number" id="nsValue" value="90" min="0" class="noshow-inp" oninput="runAll()">
-            <select id="nsUnit" onchange="runAll()" style="padding:7px 9px;border:1px solid var(--border-s);border-radius:7px;font-family:inherit;font-size:12px;color:var(--text);background:#f8fafc;outline:none;cursor:pointer;">
-              <option value="min" data-ar="دقيقة" data-en="minutes">دقيقة</option>
-              <option value="hr" data-ar="ساعة" data-en="hours">ساعة</option>
+            <!-- hidden select kept for backward compat -->
+            <select id="nsUnit" onchange="nsUnitChanged()" style="display:none;">
+              <option value="min">دقيقة</option>
+              <option value="hr">ساعة</option>
             </select>
+            <div style="display:flex;border:1.5px solid var(--border-s);border-radius:8px;overflow:hidden;font-size:12px;font-weight:600;">
+              <button id="nsBtnMin" onclick="setNsUnit('min', true)"
+                style="padding:7px 12px;border:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:.15s;background:var(--emerald);color:#fff;">
+                <span data-ar>دقيقة</span><span data-en style="display:none;">Min</span>
+              </button>
+              <button id="nsBtnHr" onclick="setNsUnit('hr', true)"
+                style="padding:7px 12px;border:none;cursor:pointer;font-family:inherit;font-size:12px;font-weight:600;transition:.15s;background:#f1f5f9;color:var(--muted);">
+                <span data-ar>ساعة</span><span data-en style="display:none;">Hour</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1715,23 +1755,45 @@ function autoDetectTripType(flights){
 // ══ NO-SHOW RULES ══
 // noShowMap is populated from flight_data.json (or fallback in _useFallbackData)
 
+// ══ NO-SHOW UNIT TOGGLE ══
+function setNsUnit(unit, triggerRunAll){
+  const sel=document.getElementById('nsUnit');
+  if(sel) sel.value=unit;
+  const btnMin=document.getElementById('nsBtnMin');
+  const btnHr=document.getElementById('nsBtnHr');
+  if(btnMin && btnHr){
+    if(unit==='min'){
+      btnMin.style.background='var(--emerald)'; btnMin.style.color='#fff';
+      btnHr.style.background='#f1f5f9'; btnHr.style.color='var(--muted)';
+    } else {
+      btnHr.style.background='var(--emerald)'; btnHr.style.color='#fff';
+      btnMin.style.background='#f1f5f9'; btnMin.style.color='var(--muted)';
+    }
+  }
+  // Only trigger runAll when called directly by user (not from within runAll chain)
+  if(triggerRunAll) runAll();
+}
+function nsUnitChanged(){
+  const sel=document.getElementById('nsUnit');
+  if(sel) setNsUnit(sel.value, true);
+}
+
 function applyNoShowRule(airlineCode){
   const rule=noShowMap[airlineCode];
   if(!rule)return;
   const nsValueEl=document.getElementById('nsValue');
-  const nsUnitEl=document.getElementById('nsUnit');
   const nsBadgeEl=document.getElementById('nsBadge');
   const minsMatch=rule.match(/^(\d+)\s*mins?/i);
   if(minsMatch){
     nsValueEl.value=parseInt(minsMatch[1]);
-    nsUnitEl.value='min';
+    setNsUnit('min', false);
     if(nsBadgeEl){nsBadgeEl.textContent='✅ '+airlineCode+' ('+rule+')';nsBadgeEl.style.color='#d97706';}
     return;
   }
   const simpleNum=rule.match(/^(\d+)$/);
   if(simpleNum){
     nsValueEl.value=parseInt(simpleNum[1]);
-    nsUnitEl.value='hr';
+    setNsUnit('hr');
     if(nsBadgeEl){nsBadgeEl.textContent='✅ '+airlineCode;nsBadgeEl.style.color='#16a34a';}
     return;
   }
@@ -1771,6 +1833,17 @@ function setLang(lang){
   const nu=document.getElementById('nsUnit');
   nu.options[0].text=lang==='ar'?'دقيقة':'Minutes';
   nu.options[1].text=lang==='ar'?'ساعة':'Hours';
+  // Update toggle button text
+  const btnMin=document.getElementById('nsBtnMin');
+  const btnHr=document.getElementById('nsBtnHr');
+  if(btnMin){
+    btnMin.querySelectorAll('[data-ar]').forEach(el=>el.style.display=lang==='ar'?'':'none');
+    btnMin.querySelectorAll('[data-en]').forEach(el=>el.style.display=lang==='en'?'':'none');
+  }
+  if(btnHr){
+    btnHr.querySelectorAll('[data-ar]').forEach(el=>el.style.display=lang==='ar'?'':'none');
+    btnHr.querySelectorAll('[data-en]').forEach(el=>el.style.display=lang==='en'?'':'none');
+  }
   buildFormatHelper();runAll();updateLiveStrip();
 }
 
@@ -2791,8 +2864,9 @@ function buildOutputs(){
   const curr=document.getElementById('currency').value;
   const nsVal=document.getElementById('nsValue').value;
   const nsEl=document.getElementById('nsUnit');
-  const nsAr=nsEl.options[nsEl.selectedIndex].dataset.ar;
-  const nsEn=nsEl.options[nsEl.selectedIndex].dataset.en;
+  const _nsUnitVal=nsEl.options[nsEl.selectedIndex].value;
+  const nsAr=_nsUnitVal==='min'?'دقيقة':'ساعة';
+  const nsEn=_nsUnitVal==='min'?'minutes':'hours';
   const paxNamesRaw=document.getElementById('paxNamesText')?document.getElementById('paxNamesText').value.trim():'';
   const paxNames=paxNamesRaw?paxNamesRaw.split(/[\n,،]+/).map(s=>s.trim()).filter(Boolean):[];
   const feePerPax=getActiveFee();
@@ -3003,6 +3077,7 @@ window.resetAll=function(){
   renderPaxNameFields();
   document.getElementById('nsValue').value='90';
   document.getElementById('nsUnit').selectedIndex=0;
+  setNsUnit('min');
   const b=document.getElementById('nsBadge');if(b){b.textContent='';}
   const tb=document.getElementById('tripBadge');if(tb){tb.textContent='';}
   document.getElementById('currency').value='SAR';
@@ -3025,7 +3100,7 @@ window.resetAll=function(){
 document.addEventListener('wheel',function(e){if(document.activeElement&&document.activeElement.type==='number'){document.activeElement.blur();}},{passive:false});
 document.querySelectorAll('input[type="number"]').forEach(el=>{el.addEventListener('wheel',e=>e.preventDefault(),{passive:false});});
 
-window.setLang=setLang;window.runAll=runAll;window.showHiddenDetails=showHiddenDetails;
+window.setLang=setLang;window.runAll=runAll;window.setNsUnit=setNsUnit;window.nsUnitChanged=nsUnitChanged;window.showHiddenDetails=showHiddenDetails;
 window.stopAnnouncement=function(){_tts.cancel();};
 window.copyText=copyText;window.startEdit=startEdit;window.cancelEdit=cancelEdit;window.saveEdit=saveEdit;
 window.calcFareDiff=calcFareDiff;window.changePax=changePax;window.changePaxType=changePaxType;
@@ -6998,6 +7073,165 @@ function announceFlightAfterEdit(){
   const text = buildFlightAnnouncement(currentLang);
   if(text) _tts.speak(text, currentLang);
 }
+
+// ══════════════════════════════════════════════
+// FEATURE 1: DEBOUNCE — rawSeg oninput
+// ══════════════════════════════════════════════
+(function(){
+  let _debTimer = null;
+  window._debouncedRunAll = function(val){
+    detectAndGuide(val);
+    clearTimeout(_debTimer);
+    _debTimer = setTimeout(function(){ runAll(); }, 200);
+  };
+})();
+
+// ══════════════════════════════════════════════
+// FEATURE 2: PRINT / SAVE AS PDF
+// ══════════════════════════════════════════════
+(function(){
+  const style = document.createElement('style');
+  style.textContent = `
+@media print {
+  .icon-sidebar, .progress-bar, .input-panel, .stats-strip,
+  .action-row, #actionPanel, #detailsSection, .wf-overlay,
+  .welcome-overlay, #feesOverlay, .fixed-footer,
+  button:not(.print-visible), [style*="position:fixed"] {
+    display: none !important;
+  }
+  .app-shell { grid-template-columns: 1fr !important; }
+  .body-layout { grid-template-columns: 1fr !important; }
+  .output-panel { padding: 0 !important; }
+  .quote-card { break-inside: avoid; border: 1px solid #ccc; margin-bottom: 16px; border-radius: 8px; }
+  .msg-box { white-space: pre-wrap; font-size: 13px; padding: 12px; }
+  body { background: #fff !important; }
+  @page { margin: 20mm; }
+}`;
+  document.head.appendChild(style);
+
+  window.printQuote = function(){
+    window.print();
+  };
+})();
+
+// ══════════════════════════════════════════════
+// FEATURE 3: COPY BOTH (AR + EN)
+// ══════════════════════════════════════════════
+window.copyBothQuotes = function(btn){
+  const arEl = document.getElementById('quoteAr');
+  const enEl = document.getElementById('quoteEn');
+  if(!arEl || !enEl) return;
+  const arTxt = (arEl.innerText||'').trim();
+  const enTxt = (enEl.innerText||'').trim();
+  if(!arTxt && !enTxt) return;
+  const combined = arTxt + '\n\n――――――――――――――――――――\n\n' + enTxt;
+  navigator.clipboard.writeText(combined).then(function(){
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span>✅</span><span>تم النسخ / Copied</span>';
+    setTimeout(function(){ btn.innerHTML = orig; }, 1800);
+  }).catch(function(){
+    const r = document.createRange();
+    const dummy = document.createElement('textarea');
+    dummy.value = combined;
+    document.body.appendChild(dummy);
+    dummy.select();
+    document.execCommand('copy');
+    document.body.removeChild(dummy);
+  });
+};
+
+// ══════════════════════════════════════════════
+// FEATURE 4: RECENT INPUTS (last 5, localStorage)
+// ══════════════════════════════════════════════
+(function(){
+  const STORAGE_KEY = 'almosafer_recent_inputs';
+  const MAX = 5;
+
+  function getRecents(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }
+    catch(e){ return []; }
+  }
+
+  function saveRecent(val){
+    if(!val || val.trim().length < 8) return;
+    let list = getRecents().filter(function(v){ return v !== val.trim(); });
+    list.unshift(val.trim());
+    if(list.length > MAX) list = list.slice(0, MAX);
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch(e){}
+    renderRecentUI();
+  }
+
+  function renderRecentUI(){
+    const list = getRecents();
+    const wrap = document.getElementById('recentInputsWrap');
+    if(!wrap) return;
+    wrap.style.display = list.length ? 'block' : 'none';
+    const dropdown = document.getElementById('recentDropdown');
+    if(!dropdown) return;
+    dropdown.innerHTML = list.map(function(item, i){
+      const preview = item.replace(/\n/g,' ').slice(0, 60) + (item.length > 60 ? '…' : '');
+      return '<div role="option" tabindex="0" onclick="applyRecentInput(' + i + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \')applyRecentInput(' + i + ')" style="padding:8px 10px;font-size:11px;font-family:\'IBM Plex Mono\',monospace;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:.12s;" onmouseover="this.style.background=\'var(--emerald-x)\'" onmouseout="this.style.background=\'\'">'+preview+'</div>';
+    }).join('');
+  }
+
+  window.applyRecentInput = function(idx){
+    const list = getRecents();
+    if(!list[idx]) return;
+    const ta = document.getElementById('rawSeg');
+    if(!ta) return;
+    ta.value = list[idx];
+    toggleRecentDropdown(false);
+    runAll();
+    detectAndGuide(ta.value);
+  };
+
+  window.toggleRecentDropdown = function(forceState){
+    const dd = document.getElementById('recentDropdown');
+    const btn = document.getElementById('recentDropBtn');
+    const arrow = document.getElementById('recentDropArrow');
+    if(!dd) return;
+    const open = forceState !== undefined ? forceState : dd.style.display === 'none';
+    dd.style.display = open ? 'block' : 'none';
+    if(btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if(arrow) arrow.style.transform = open ? 'rotate(180deg)' : '';
+  };
+
+  // Save when runAll fires and flight is valid
+  const _origRunAllRecent = window.runAll;
+  window.runAll = function(){
+    _origRunAllRecent.apply(this, arguments);
+    const ta = document.getElementById('rawSeg');
+    if(ta && ta.value.trim().length > 8 && flightIsValid()){
+      saveRecent(ta.value);
+    }
+  };
+
+  // Close dropdown on outside click
+  document.addEventListener('click', function(e){
+    const wrap = document.getElementById('recentInputsWrap');
+    if(wrap && !wrap.contains(e.target)){
+      const dd = document.getElementById('recentDropdown');
+      if(dd) dd.style.display = 'none';
+    }
+  });
+
+  // Init on load
+  setTimeout(renderRecentUI, 500);
+})();
+
+// ══════════════════════════════════════════════
+// FEATURE 5: ARIA — lang toggle aria-pressed sync
+// ══════════════════════════════════════════════
+(function(){
+  const _origSetLangAria = window.setLang;
+  window.setLang = function(lang){
+    _origSetLangAria.apply(this, arguments);
+    const btnAr = document.getElementById('btnAr');
+    const btnEn = document.getElementById('btnEn');
+    if(btnAr) btnAr.setAttribute('aria-pressed', lang === 'ar' ? 'true' : 'false');
+    if(btnEn) btnEn.setAttribute('aria-pressed', lang === 'en' ? 'true' : 'false');
+  };
+})();
 
 </script>
 </body>
