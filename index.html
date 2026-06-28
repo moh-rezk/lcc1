@@ -600,6 +600,7 @@ html[lang=ar] [data-en] { display: none !important; }
       <div class="sb-icon" id="sb-names" data-tip="أسماء المسافرين" data-tip-en="Passenger Names" onclick="sbNav('names')">👥</div>
     </div>
     <div class="sb-spacer"></div>
+    <div class="sb-icon" id="sb-refresh-db" data-tip="تحديث قاعدة البيانات" data-tip-en="Refresh Database" onclick="refreshFlightData()" style="color:#0ea5e9;">🔄</div>
     <div class="sb-icon" id="sb-reset" data-tip="إعادة ضبط" data-tip-en="Reset All" onclick="resetAll()" style="color:#ef4444;">↺</div>
     <div class="sb-version">v70</div>
   </aside>
@@ -1319,7 +1320,9 @@ function syncPaxFromInputs() {
 }
 
 // ══════════════════════════════════════════════════════════════════
-//  DATA — loaded from flight_data.json
+//  DATA — loaded live from GitHub flight_data.json
+//  Falls back to embedded snapshot, then to a tiny hardcoded set,
+//  if the network fetch fails for any reason.
 // ══════════════════════════════════════════════════════════════════
 
 // Placeholders — filled by loadFlightData()
@@ -1329,49 +1332,113 @@ let cityToIATA = {};
 let saudiAirports = new Set();
 let noShowMap = {};
 let _dataLoaded = false;
+let _dataSource = null; // 'live' | 'embedded' | 'fallback'
 
-function loadFlightData() {
-  try {
-    // Data embedded directly — no fetch needed
-    const db = _EMBEDDED_FLIGHT_DATA;
+const _GH_DB_URL = 'https://raw.githubusercontent.com/moh-rezk/GDS2/main/flight_data.json';
+const _GH_DB_TIMEOUT_MS = 6000;
 
-    // airports: convert {ar,en,city_ar,city_en,country} → {ar,en}
-    airportMap = {};
-    for (const [code, val] of Object.entries(db.airports)) {
-      airportMap[code] = { ar: val.ar, en: val.en };
-    }
+function _applyDbObject(db) {
+  // airports: {code:{ar,en,city_ar,city_en,country}} → {code:{ar,en}}
+  airportMap = {};
+  for (const [code, val] of Object.entries(db.airports || {})) {
+    airportMap[code] = { ar: val.ar, en: val.en };
+  }
+  // airlines: {code:{ar,en,country,type}} → {code:{ar,en}}
+  airDB = {};
+  for (const [code, val] of Object.entries(db.airlines || {})) {
+    airDB[code] = { ar: val.ar, en: val.en };
+  }
+  cityToIATA = db.cityToIATA || {};
+  saudiAirports = new Set(db.saudiAirports || []);
+  noShowMap = db.noShowRules || {};
+}
 
-    // airlines: convert {ar,en,country,type} → {ar,en}
-    airDB = {};
-    for (const [code, val] of Object.entries(db.airlines)) {
-      airDB[code] = { ar: val.ar, en: val.en };
-    }
+function _finishDataLoad(sourceLabel) {
+  _dataSource = sourceLabel;
+  _dataLoaded = true;
+  buildFormatHelper();
+  setTripType('international');
+  buildCountryOptions();
+  updateFeeBtnLabels();
+  updateCurrencyLabel();
+  const feesOv = document.getElementById('feesOverlay');
+  if (feesOv) feesOv.style.display = 'none';
+  updateInputLocks();
+  updateExtractBtn();
+  _renderDbStatusBadge();
+  console.log(`✅ flight_data loaded from [${sourceLabel}]:`,
+    Object.keys(airportMap).length, 'airports,', Object.keys(airDB).length, 'airlines');
+}
 
-    // city → IATA mapping
-    cityToIATA = db.cityToIATA || {};
-
-    // Saudi airports set
-    saudiAirports = new Set(db.saudiAirports || []);
-
-    // No-show rules
-    noShowMap = db.noShowRules || {};
-
-    _dataLoaded = true;
-    buildFormatHelper();
-    setTripType('international');
-    buildCountryOptions();
-    updateFeeBtnLabels();
-    updateCurrencyLabel();
-    document.getElementById('feesOverlay').style.display = 'none';
-    updateInputLocks();
-    updateExtractBtn();
-    console.log('✅ Embedded flight_data loaded:', Object.keys(airportMap).length, 'airports,', Object.keys(airDB).length, 'airlines');
-  } catch (err) {
-    console.warn('⚠️ Could not load embedded data, using built-in fallback.', err);
-    _useFallbackData();
-    _dataLoaded = true;
+// Small status pill so the user can see at a glance whether the live
+// (GitHub-hosted) database loaded, or whether the tool fell back to an
+// older snapshot embedded in the file.
+function _renderDbStatusBadge() {
+  let el = document.getElementById('dbStatusBadge');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'dbStatusBadge';
+    el.style.cssText = 'position:fixed;bottom:10px;left:10px;z-index:50;font-size:10px;'
+      + 'font-family:IBM Plex Mono,monospace;padding:4px 9px;border-radius:20px;'
+      + 'font-weight:700;cursor:default;box-shadow:0 2px 8px rgba(0,0,0,0.12);';
+    document.body.appendChild(el);
+  }
+  if (_dataSource === 'live') {
+    el.textContent = '🟢 DB: Live (GitHub)';
+    el.style.background = '#dcfce7'; el.style.color = '#166534'; el.style.border = '1px solid #bbf7d0';
+  } else if (_dataSource === 'embedded') {
+    el.textContent = '🟡 DB: Embedded snapshot (offline)';
+    el.style.background = '#fef3c7'; el.style.color = '#92400e'; el.style.border = '1px solid #fde68a';
+  } else {
+    el.textContent = '🔴 DB: Built-in fallback (minimal)';
+    el.style.background = '#fee2e2'; el.style.color = '#991b1b'; el.style.border = '1px solid #fecaca';
   }
 }
+
+function _fetchWithTimeout(url, ms) {
+  const ctrl = new AbortController();
+  const id = setTimeout(() => ctrl.abort(), ms);
+  return fetch(url, { cache: 'no-store', signal: ctrl.signal })
+    .finally(() => clearTimeout(id));
+}
+
+async function loadFlightData() {
+  // 1) Try the LIVE database on GitHub first — this is the source of truth
+  //    and is what gets corrected/updated going forward.
+  try {
+    const res = await _fetchWithTimeout(_GH_DB_URL, _GH_DB_TIMEOUT_MS);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const db = await res.json();
+    if (!db || !db.airports || !db.airlines) throw new Error('Malformed DB payload');
+    _applyDbObject(db);
+    _finishDataLoad('live');
+    return;
+  } catch (err) {
+    console.warn('⚠️ Live GitHub DB fetch failed, trying embedded snapshot…', err);
+  }
+
+  // 2) Fall back to the snapshot embedded in this file (may be stale).
+  try {
+    const db = _EMBEDDED_FLIGHT_DATA;
+    if (!db || !db.airports || !db.airlines) throw new Error('Embedded DB missing/malformed');
+    _applyDbObject(db);
+    _finishDataLoad('embedded');
+    return;
+  } catch (err) {
+    console.warn('⚠️ Embedded data unusable, using minimal built-in fallback.', err);
+  }
+
+  // 3) Last resort: tiny hardcoded table so the tool still functions.
+  _useFallbackData();
+  _finishDataLoad('fallback');
+}
+
+// Manual "refresh database" action — re-runs the same load sequence.
+// Exposed on window so a button (or the status badge) can trigger it.
+window.refreshFlightData = function () {
+  _dataLoaded = false;
+  loadFlightData();
+};
 
 function _useFallbackData() {
   airportMap = {
@@ -2487,37 +2554,175 @@ function renderFlightChips(flights){
 
 function buildEditCard(f,i){
   const div=document.createElement('div');div.className='edit-overlay';
-  div.innerHTML=`<strong style="color:var(--emerald-d);font-size:12px;">${currentLang==='ar'?'تعديل الرحلة':'Edit Flight'} ${i+1}</strong>
+  const isAr=currentLang==='ar';
+  div.innerHTML=`<strong style="color:var(--emerald-d);font-size:12px;">${isAr?'تعديل الرحلة':'Edit Flight'} ${i+1}</strong>
     <div class="eg">
-      <div><label>From</label><input id="ef_from" value="${f.fromCode}"></div>
-      <div><label>To</label><input id="ef_to" value="${f.toCode}"></div>
-      <div><label>Dep</label><input id="ef_dep" value="${f.time}"></div>
-      <div><label>Arr</label><input id="ef_arr" value="${f.arrTime}"></div>
-      <div><label>Day</label><input id="ef_day" value="${f.day}"></div>
-      <div><label>Mon</label><input id="ef_mon" value="${f.mon}"></div>
-      <div><label>Year</label><input id="ef_year" value="${f.year}"></div>
-      <div><label>Airline</label><input id="ef_air" value="${f.airlineCode}"></div>
-      <div><label>Flight#</label><input id="ef_fn" value="${f.flightNum}"></div>
+      <div>
+        <label>From (IATA)</label>
+        <input id="ef_from" value="${f.fromCode}" maxlength="3" style="text-transform:uppercase;font-family:'IBM Plex Mono',monospace;" oninput="this.value=this.value.toUpperCase();_validateEditField('from')">
+        <div id="ef_from_hint" class="ee-hint"></div>
+      </div>
+      <div>
+        <label>To (IATA)</label>
+        <input id="ef_to" value="${f.toCode}" maxlength="3" style="text-transform:uppercase;font-family:'IBM Plex Mono',monospace;" oninput="this.value=this.value.toUpperCase();_validateEditField('to')">
+        <div id="ef_to_hint" class="ee-hint"></div>
+      </div>
+      <div><label>Dep (HH:MM)</label><input id="ef_dep" value="${f.time}" placeholder="14:30" oninput="_validateEditField('dep')"><div id="ef_dep_hint" class="ee-hint"></div></div>
+      <div><label>Arr (HH:MM)</label><input id="ef_arr" value="${f.arrTime}" placeholder="16:05" oninput="_validateEditField('arr')"><div id="ef_arr_hint" class="ee-hint"></div></div>
+      <div><label>Day</label><input id="ef_day" value="${f.day}" maxlength="2" oninput="_validateEditField('day')"></div>
+      <div><label>Mon</label><input id="ef_mon" value="${f.mon}" maxlength="3" style="text-transform:uppercase;" oninput="this.value=this.value.toUpperCase();_validateEditField('mon')"></div>
+      <div><label>Year</label><input id="ef_year" value="${f.year}" maxlength="4" oninput="_validateEditField('year')"></div>
+      <div>
+        <label>Airline (IATA)</label>
+        <input id="ef_air" value="${f.airlineCode}" maxlength="3" style="text-transform:uppercase;font-family:'IBM Plex Mono',monospace;" oninput="this.value=this.value.toUpperCase();_validateEditField('air')">
+        <div id="ef_air_hint" class="ee-hint"></div>
+      </div>
+      <div><label>Flight#</label><input id="ef_fn" value="${f.flightNum}" inputmode="numeric"></div>
       <div><label>Dep T</label><input id="ef_term" value="${f.terminal}"></div>
       <div><label>Arr T</label><input id="ef_aterm" value="${f.arrTerminal}"></div>
     </div>
-    <button class="save-btn" onclick="saveEdit(${i})">💾 ${currentLang==='ar'?'حفظ':'Save'}</button>
+    <div id="ef_overall_msg" style="margin-top:7px;font-size:10.5px;font-weight:600;"></div>
+    <button class="save-btn" id="ef_save_btn" onclick="saveEdit(${i})">💾 ${isAr?'حفظ':'Save'}</button>
     <button class="save-btn" style="background:var(--muted);margin-right:8px;" onclick="cancelEdit()">✖</button>`;
+  setTimeout(()=>{
+    ['from','to','dep','arr','day','mon','year','air'].forEach(_validateEditField);
+  },0);
   return div;
+}
+
+// Lightweight style for the inline validation hints under each field.
+(function _ensureEditHintStyle(){
+  if(document.getElementById('eeHintStyle'))return;
+  const s=document.createElement('style');
+  s.id='eeHintStyle';
+  s.textContent='.ee-hint{font-size:9.5px;margin-top:2px;min-height:11px;font-weight:600;}'
+    +'.ee-hint.ok{color:#15803d;}.ee-hint.bad{color:#dc2626;}.ee-hint.neutral{color:var(--faint);font-weight:400;}'
+    +'#ef_from.ee-bad-input,#ef_to.ee-bad-input,#ef_air.ee-bad-input,#ef_dep.ee-bad-input,#ef_arr.ee-bad-input{border-color:#fca5a5!important;background:#fff5f5!important;}'
+    +'#ef_from.ee-ok-input,#ef_to.ee-ok-input,#ef_air.ee-ok-input{border-color:#bbf7d0!important;background:#f0fdf4!important;}';
+  document.head.appendChild(s);
+})();
+
+// Validates a single field in the open edit card and updates its hint +
+// the overall save-button enabled state. Looks codes up against the
+// live-loaded airportMap / airDB so corrections are checked against the
+// real database, not just regex shape.
+function _validateEditField(which){
+  const isAr=currentLang==='ar';
+  const setHint=(id,cls,text)=>{const h=document.getElementById(id);if(h){h.className='ee-hint '+cls;h.textContent=text;}};
+  const setInputState=(id,ok)=>{
+    const inp=document.getElementById(id);if(!inp)return;
+    inp.classList.remove('ee-ok-input','ee-bad-input');
+    if(ok===true)inp.classList.add('ee-ok-input');
+    else if(ok===false)inp.classList.add('ee-bad-input');
+  };
+
+  if(which==='from'||which==='to'){
+    const inp=document.getElementById('ef_'+which);
+    const code=(inp?.value||'').trim().toUpperCase();
+    const hintId='ef_'+which+'_hint';
+    if(!code){setHint(hintId,'neutral',isAr?'أدخل رمز المطار':'Enter airport code');setInputState('ef_'+which,null);}
+    else if(code.length!==3){setHint(hintId,'bad',isAr?'يجب أن يكون 3 حروف':'Must be 3 letters');setInputState('ef_'+which,false);}
+    else if(airportMap[code]){
+      const name=isAr?airportMap[code].ar:airportMap[code].en;
+      setHint(hintId,'ok',`✓ ${name}`);setInputState('ef_'+which,true);
+    } else {
+      setHint(hintId,'bad',isAr?'⚠ غير موجود في قاعدة البيانات':'⚠ Not found in database');setInputState('ef_'+which,false);
+    }
+  }
+
+  if(which==='air'){
+    const inp=document.getElementById('ef_air');
+    const code=(inp?.value||'').trim().toUpperCase();
+    if(!code){setHint('ef_air_hint','neutral',isAr?'أدخل كود الشركة':'Enter airline code');setInputState('ef_air',null);}
+    else if(airDB[code]){
+      const name=isAr?airDB[code].ar:airDB[code].en;
+      setHint('ef_air_hint','ok',`✓ ${name}`);setInputState('ef_air',true);
+    } else {
+      setHint('ef_air_hint','bad',isAr?'⚠ غير موجود في قاعدة البيانات':'⚠ Not found in database');setInputState('ef_air',false);
+    }
+  }
+
+  if(which==='dep'||which==='arr'){
+    const inp=document.getElementById('ef_'+which);
+    const v=(inp?.value||'').trim();
+    const hintId='ef_'+which+'_hint';
+    const timeOk=/^([01]?\d|2[0-3]):[0-5]\d$/.test(v);
+    if(!v){setHint(hintId,'neutral','');setInputState('ef_'+which,null);}
+    else if(timeOk){setHint(hintId,'ok','✓ HH:MM');setInputState('ef_'+which,true);}
+    else{setHint(hintId,'bad',isAr?'صيغة الوقت يجب أن تكون HH:MM':'Time must be HH:MM');setInputState('ef_'+which,false);}
+  }
+
+  if(which==='day'){
+    const v=parseInt(document.getElementById('ef_day')?.value);
+    document.getElementById('ef_day').classList.toggle('ee-bad-input', !(v>=1&&v<=31));
+  }
+  if(which==='year'){
+    const v=parseInt(document.getElementById('ef_year')?.value);
+    document.getElementById('ef_year').classList.toggle('ee-bad-input', !(v>=2024&&v<=2035));
+  }
+  if(which==='mon'){
+    const v=(document.getElementById('ef_mon')?.value||'').toUpperCase();
+    const validMons=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    document.getElementById('ef_mon').classList.toggle('ee-bad-input', !validMons.includes(v));
+  }
+
+  _updateEditOverallStatus();
+}
+
+function _updateEditOverallStatus(){
+  const isAr=currentLang==='ar';
+  const fromOk=airportMap[(document.getElementById('ef_from')?.value||'').toUpperCase()];
+  const toOk=airportMap[(document.getElementById('ef_to')?.value||'').toUpperCase()];
+  const airOk=airDB[(document.getElementById('ef_air')?.value||'').toUpperCase()];
+  const depOk=/^([01]?\d|2[0-3]):[0-5]\d$/.test(document.getElementById('ef_dep')?.value||'');
+  const arrOk=/^([01]?\d|2[0-3]):[0-5]\d$/.test(document.getElementById('ef_arr')?.value||'');
+  const allOk=fromOk&&toOk&&airOk&&depOk&&arrOk;
+  const msg=document.getElementById('ef_overall_msg');
+  const saveBtn=document.getElementById('ef_save_btn');
+  if(msg){
+    if(allOk){msg.textContent='✅ '+(isAr?'كل البيانات صحيحة وجاهزة للحفظ':'All fields valid — ready to save');msg.style.color='#15803d';}
+    else{msg.textContent='⚠️ '+(isAr?'راجع الحقول المظللة بالأحمر قبل الحفظ':'Review the fields highlighted in red before saving');msg.style.color='#dc2626';}
+  }
+  if(saveBtn){saveBtn.style.opacity=allOk?'1':'0.55';}
 }
 
 function startEdit(i){editingIndex=i;renderFlightChips(parsedFlightsData);}
 function cancelEdit(){editingIndex=-1;renderFlightChips(parsedFlightsData);}
 function saveEdit(i){
   const f=parsedFlightsData[i];
-  f.fromCode=document.getElementById('ef_from').value.toUpperCase();
-  f.toCode=document.getElementById('ef_to').value.toUpperCase();
-  f.time=document.getElementById('ef_dep').value;
-  f.arrTime=document.getElementById('ef_arr').value;
+  const fromCode=document.getElementById('ef_from').value.toUpperCase();
+  const toCode=document.getElementById('ef_to').value.toUpperCase();
+  const airlineCode=document.getElementById('ef_air').value.toUpperCase();
+  const depTime=document.getElementById('ef_dep').value;
+  const arrTime=document.getElementById('ef_arr').value;
+  const isAr=currentLang==='ar';
+
+  // Guard: warn (don't silently save) if any code isn't recognized by the
+  // live database — this is the gap that previously let typos through.
+  const problems=[];
+  if(fromCode && !airportMap[fromCode]) problems.push(isAr?`مطار الانطلاق "${fromCode}" غير موجود في قاعدة البيانات`:`Origin airport "${fromCode}" not found in database`);
+  if(toCode && !airportMap[toCode]) problems.push(isAr?`مطار الوصول "${toCode}" غير موجود في قاعدة البيانات`:`Destination airport "${toCode}" not found in database`);
+  if(airlineCode && !airDB[airlineCode]) problems.push(isAr?`شركة الطيران "${airlineCode}" غير موجودة في قاعدة البيانات`:`Airline "${airlineCode}" not found in database`);
+  if(depTime && !/^([01]?\d|2[0-3]):[0-5]\d$/.test(depTime)) problems.push(isAr?'صيغة وقت الإقلاع غير صحيحة (HH:MM)':'Departure time format invalid (HH:MM)');
+  if(arrTime && !/^([01]?\d|2[0-3]):[0-5]\d$/.test(arrTime)) problems.push(isAr?'صيغة وقت الوصول غير صحيحة (HH:MM)':'Arrival time format invalid (HH:MM)');
+
+  if(problems.length){
+    const proceed=confirm(
+      (isAr?'⚠️ تحذير — تم رصد المشاكل التالية:\n\n':'⚠️ Warning — the following issues were found:\n\n')
+      +problems.map(p=>'• '+p).join('\n')
+      +(isAr?'\n\nهل تريد الحفظ رغم ذلك؟':'\n\nSave anyway?')
+    );
+    if(!proceed)return;
+  }
+
+  f.fromCode=fromCode;
+  f.toCode=toCode;
+  f.time=depTime;
+  f.arrTime=arrTime;
   f.day=document.getElementById('ef_day').value;
   f.mon=document.getElementById('ef_mon').value.toUpperCase();
   f.year=document.getElementById('ef_year').value;
-  f.airlineCode=document.getElementById('ef_air').value.toUpperCase();
+  f.airlineCode=airlineCode;
   f.flightNum=document.getElementById('ef_fn').value;
   f.terminal=document.getElementById('ef_term').value;
   f.arrTerminal=document.getElementById('ef_aterm').value;
@@ -2527,6 +2732,11 @@ function saveEdit(i){
   f.dateAr=`${parseInt(f.day)} ${monthAr[f.mon]||f.mon} ${f.year}`;
   f.dateEn=`${parseInt(f.day)} ${f.mon} ${f.year}`;
   editingIndex=-1;renderFlightChips(parsedFlightsData);
+  // Lock the raw-text guard to the current textarea value so later
+  // runAll() calls (e.g. typing the fare) don't re-parse and discard
+  // this manual correction.
+  const _rawNowSE=document.getElementById('rawSeg')?.value.trim();
+  if(_rawNowSE!==undefined) _lastParsedRawText=_rawNowSE;
   // Unlock input sections if flight is now valid
   updateInputLocks();
   updateExtractBtn();
@@ -2824,6 +3034,8 @@ function validateFlights(flights){
 }
 
 // ══ MAIN RUNNER ══
+let _lastParsedRawText = null; // tracks the text that produced the current parsedFlightsData
+
 function runAll(){
   renderPaxNameFields();
   const raw=document.getElementById('rawSeg').value.trim();
@@ -2837,10 +3049,17 @@ function runAll(){
     document.getElementById('calcResults').style.display='none';
     document.getElementById('parseStatus').innerHTML='';
     document.getElementById('parsedFlights').innerHTML='';
-    parsedFlightsData=[];return;
+    parsedFlightsData=[];_lastParsedRawText=null;return;
   }
-  parsedFlightsData=smartExtract(raw);
-  autoDetectTripType(parsedFlightsData);
+  // Only re-parse the raw flight text when it has actually changed.
+  // Without this guard, typing into totalFare/baggage/pax/etc (which also
+  // calls runAll) would re-run smartExtract() on every keystroke and wipe
+  // out any manual "Edit Flight" corrections the user already made.
+  if(raw!==_lastParsedRawText || !parsedFlightsData || !parsedFlightsData.length){
+    parsedFlightsData=smartExtract(raw);
+    autoDetectTripType(parsedFlightsData);
+    _lastParsedRawText=raw;
+  }
   renderFlightChips(parsedFlightsData);
   // Validate — block output if critical fields missing
   if(!validateFlights(parsedFlightsData)){
@@ -7217,6 +7436,217 @@ window.copyBothQuotes = function(btn){
 
   // Init on load
   setTimeout(renderRecentUI, 500);
+})();
+
+// ══════════════════════════════════════════════
+// FEATURE 6: SESSION PERSISTENCE (auto-save / auto-restore)
+// ──────────────────────────────────────────────
+// Keeps everything the user has entered (flight text, fees, pax counts,
+// baggage, names, currency/country, trip type, language, and the parsed
+// flight chips themselves) in localStorage, and restores it on next load
+// so a refresh / re-open never forces the user to re-type anything.
+// A small "🗑 Clear saved session" control is offered so the user can
+// still start fresh on purpose.
+// ══════════════════════════════════════════════
+(function(){
+  const SESSION_KEY = 'almosafer_lcc_session_v1';
+  const SAVE_DEBOUNCE_MS = 350;
+  let _saveTimer = null;
+
+  const FIELD_IDS = ['rawSeg','totalFare','penaltyAmount','paxNamesText','bHand','bCheck',
+                      'nsValue','adtCount','chdCount','infCount','adtDisplay','chdDisplay','infDisplay','paxCount'];
+
+  function collectSession(){
+    const data = { _v: 1, savedAt: Date.now(), fields: {}, };
+    FIELD_IDS.forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) data.fields[id] = el.value;
+    });
+    data.lang = currentLang;
+    data.activeCountryId = (typeof activeCountryId !== 'undefined') ? activeCountryId : null;
+    data.paxCounts = (typeof paxCounts !== 'undefined') ? paxCounts : null;
+    data.fsTripType = (typeof fsTripType !== 'undefined') ? fsTripType : null;
+    data.parsedFlightsData = (typeof parsedFlightsData !== 'undefined') ? parsedFlightsData : [];
+    const tripTypeSel = document.querySelector('.ft-btn.active');
+    data.tripTypeBtn = tripTypeSel ? tripTypeSel.dataset.type : null;
+    return data;
+  }
+
+  function saveSession(){
+    try{
+      localStorage.setItem(SESSION_KEY, JSON.stringify(collectSession()));
+      _showSaveIndicator();
+    }catch(e){ console.warn('Session save failed', e); }
+  }
+
+  function debouncedSave(){
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveSession, SAVE_DEBOUNCE_MS);
+  }
+
+  function loadSession(){
+    try{
+      const raw = localStorage.getItem(SESSION_KEY);
+      if(!raw) return null;
+      return JSON.parse(raw);
+    }catch(e){ return null; }
+  }
+
+  function clearSession(){
+    try{ localStorage.removeItem(SESSION_KEY); }catch(e){}
+  }
+
+  // Small floating indicator confirming the autosave happened, so the
+  // behavior isn't invisible/mysterious to the user.
+  let _indicatorTimer = null;
+  function _showSaveIndicator(){
+    let el = document.getElementById('sessionSaveIndicator');
+    if(!el){
+      el = document.createElement('div');
+      el.id = 'sessionSaveIndicator';
+      el.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:50;font-size:10px;'
+        +'font-family:IBM Plex Mono,monospace;padding:4px 10px;border-radius:20px;font-weight:700;'
+        +'background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;opacity:0;transition:opacity .25s;';
+      document.body.appendChild(el);
+    }
+    el.textContent = currentLang==='ar' ? '💾 تم الحفظ تلقائيًا' : '💾 Auto-saved';
+    el.style.opacity = '1';
+    clearTimeout(_indicatorTimer);
+    _indicatorTimer = setTimeout(()=>{ el.style.opacity='0'; }, 1400);
+  }
+
+  function _addClearSessionButton(){
+    const sidebar = document.getElementById('sb-reset');
+    if(!sidebar || document.getElementById('sb-clear-session')) return;
+    const btn = document.createElement('div');
+    btn.className = 'sb-icon';
+    btn.id = 'sb-clear-session';
+    btn.setAttribute('data-tip', 'مسح الجلسة المحفوظة');
+    btn.setAttribute('data-tip-en', 'Clear saved session');
+    btn.style.color = '#94a3b8';
+    btn.textContent = '🗑';
+    btn.onclick = function(){
+      const isAr = currentLang === 'ar';
+      const ok = confirm(isAr
+        ? 'سيتم حذف كل البيانات المحفوظة لهذه الجلسة. هل أنت متأكد؟'
+        : 'This will erase all saved session data. Are you sure?');
+      if(!ok) return;
+      clearSession();
+      location.reload();
+    };
+    sidebar.parentNode.insertBefore(btn, sidebar);
+  }
+
+  function restoreSession(){
+    const data = loadSession();
+    if(!data) { _addClearSessionButton(); return; }
+
+    // Restore simple text/number fields first.
+    Object.entries(data.fields || {}).forEach(([id, val])=>{
+      const el = document.getElementById(id);
+      if(el && val !== undefined && val !== null) el.value = val;
+    });
+
+    // Restore language.
+    if(data.lang && data.lang !== currentLang && typeof setLang === 'function'){
+      setLang(data.lang);
+    }
+
+    // Restore country/currency selection.
+    if(data.activeCountryId && typeof setActiveCountry === 'function'){
+      try{ setActiveCountry(data.activeCountryId); }catch(e){}
+    }
+
+    // Restore pax counts object directly (UI inputs already restored above).
+    if(data.paxCounts && typeof paxCounts !== 'undefined'){
+      Object.assign(paxCounts, data.paxCounts);
+      if(typeof syncPaxFromInputs === 'function'){ try{ syncPaxFromInputs(); }catch(e){} }
+    }
+
+    // Restore trip type (domestic/international button group).
+    if(data.tripTypeBtn && typeof setTripType === 'function'){
+      try{ setTripType(data.tripTypeBtn); }catch(e){}
+    }
+
+    // Restore the previously parsed flight chips (skips re-parsing the
+    // raw text — keeps any manual "Edit Flight" corrections the user made).
+    if(Array.isArray(data.parsedFlightsData) && data.parsedFlightsData.length && typeof parsedFlightsData !== 'undefined'){
+      parsedFlightsData = data.parsedFlightsData;
+      if(typeof window._lastParsedRawText !== 'undefined' || true){
+        // Mark the restored raw text as already-parsed so the runAll()
+        // call below (and any later edits to fare/baggage/etc) won't
+        // re-run smartExtract() and wipe out the restored/edited flights.
+        try{ _lastParsedRawText = document.getElementById('rawSeg')?.value.trim(); }catch(e){}
+      }
+      if(typeof renderFlightChips === 'function') renderFlightChips(parsedFlightsData);
+      if(typeof updateInputLocks === 'function') updateInputLocks();
+      if(typeof updateExtractBtn === 'function') updateExtractBtn();
+    }
+
+    // Re-run the full calculation pipeline with restored values so the
+    // quote/output panel reflects everything immediately (no blank state).
+    if(typeof runAll === 'function'){
+      try{ runAll(); }catch(e){}
+    }
+    if(typeof buildOutputs === 'function'){
+      try{ buildOutputs(); }catch(e){}
+    }
+
+    const fareVal = parseFloat(document.getElementById('totalFare')?.value) || 0;
+    if(typeof flightIsValid === 'function' && flightIsValid() && fareVal > 0){
+      const wm = document.getElementById('waitingMsg'); if(wm) wm.style.display='none';
+      const cr = document.getElementById('calcResults'); if(cr) cr.style.display='flex';
+    }
+
+    _addClearSessionButton();
+  }
+
+  // Hook autosave onto every relevant input/change event across the form,
+  // plus into resetAll() so a manual reset also clears the saved session.
+  function wireAutosave(){
+    FIELD_IDS.forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) el.addEventListener('input', debouncedSave);
+    });
+    document.querySelectorAll('.ft-btn, .fs-trip-btn, .cur-option, .pax-btn').forEach(el=>{
+      el.addEventListener('click', debouncedSave);
+    });
+    document.getElementById('btnAr')?.addEventListener('click', debouncedSave);
+    document.getElementById('btnEn')?.addEventListener('click', debouncedSave);
+
+    // Wrap key state-mutating functions so every edit/save/extract also
+    // triggers a save of the freshly updated parsedFlightsData / state.
+    ['saveEdit','runAll','buildOutputs','changePax','changePaxType','setActiveCountry','setTripType','setLang']
+      .forEach(fnName=>{
+        const orig = window[fnName];
+        if(typeof orig === 'function'){
+          window[fnName] = function(...args){
+            const result = orig.apply(this, args);
+            debouncedSave();
+            return result;
+          };
+        }
+      });
+
+    // Reset should also wipe the saved session, not just the live UI.
+    const origReset = window.resetAll;
+    if(typeof origReset === 'function'){
+      window.resetAll = function(...args){
+        const result = origReset.apply(this, args);
+        clearSession();
+        return result;
+      };
+    }
+  }
+
+  // Run restoration after the rest of the page's init (loadFlightData,
+  // recent-inputs UI, etc.) has had a moment to set up the DOM/state.
+  setTimeout(()=>{
+    wireAutosave();
+    restoreSession();
+  }, 650);
+
+  window.clearSavedSession = clearSession;
 })();
 
 // ══════════════════════════════════════════════
