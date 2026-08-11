@@ -924,7 +924,7 @@ html[lang=ar] [data-en] { display: none !important; }
             </div>
             <div style="text-align:right;direction:rtl;width:100%;">
               <div style="display:inline-block;text-align:right;font-size:12px;color:#7f1d1d;line-height:2.2;">
-                <div>🛫 <span data-ar><b>مطار الإقلاع والوصول</b> — مثل: JED, AHB</span><span data-en><b>Departure &amp; arrival airports</b> — e.g. JED, AHB</span></div>
+                <div><span data-ar><b>مطار الإقلاع والوصول</b> — مثل: JED, AHB</span><span data-en><b>Departure &amp; arrival airports</b> — e.g. JED, AHB</span></div>
                 <div>🕐 <span data-ar><b>وقت الإقلاع ووقت الوصول</b> — مثل: 06:35 ← 07:55</span><span data-en><b>Departure &amp; arrival times</b> — e.g. 06:35 → 07:55</span></div>
                 <div>📅 <span data-ar><b>تاريخ الرحلة</b> — مثل: 21 MAY 2026</span><span data-en><b>Flight date</b> — e.g. 21 MAY 2026</span></div>
                 <div>✈️ <span data-ar><b>اسم الطيران ورقم الرحلة</b> — مثل: XY 425</span><span data-en><b>Airline &amp; flight number</b> — e.g. XY 425</span></div>
@@ -1453,7 +1453,7 @@ function _useFallbackData() {
   "HBE":{ar:"الإسكندرية",en:"Alexandria"},"SPX":{ar:"سفنكس",en:"Sphinx"},"PSD":{ar:"بورسعيد",en:"Port Said"},
   "EMY":{ar:"المنيا",en:"El Minya"},"TCP":{ar:"طابا",en:"Taba"},"AAC":{ar:"العريش",en:"Al Arish"},
   "DXB":{ar:"دبي",en:"Dubai"},"SHJ":{ar:"الشارقة",en:"Sharjah"},"AUH":{ar:"أبوظبي",en:"Abu Dhabi"},
-  "MED":{ar:"المدينة المنورة",en:"Madinah"},"URY":{ar:"القريات",en:"Gurayat"},"HAS":{ar:"حائل",en:"Hail"},"ELQ":{ar:"القصيم",en:"Qassim"},"HBT":{ar:"سكاكا",en:"Sakaka"},"AQI":{ar:"حفر الباطن",en:"Hafr Al-Batin"},"KMX":{ar:"خميس مشيط",en:"Khamis Mushait"},"MJH":{ar:"محايل عسير",en:"Muhayil Asir"},"SHB":{ar:"نيوم",en:"NEOM Bay"},"RAH":{ar:"رجال ألمع",en:"Rijal Almaa"},"TIF":{ar:"الطائف",en:"Taif"},
+  "MED":{ar:"المدينة المنورة",en:"Madinah"},"URY":{ar:"القريات",en:"Gurayat"},"HAS":{ar:"حائل",en:"Hail"},"ELQ":{ar:"القصيم",en:"Qassim"},"HBT":{ar:"سكاكا",en:"Sakaka"},"AQI":{ar:"حفر الباطن",en:"Hafr Al-Batin"},"KMX":{ar:"خميس مشيط",en:"Khamis Mushait"},"MJH":{ar:"محايل عسير",en:"Muhayil Asir"},"SHB":{ar:"نيوم",en:"NEOM Bay"},"RAH":{ar:"رفحاء",en:"Rafha"},"TIF":{ar:"الطائف",en:"Taif"},
   "AHB":{ar:"أبها",en:"Abha"},"GIZ":{ar:"جازان",en:"Jazan"},"YNB":{ar:"ينبع",en:"Yanbu"},
   "BOM":{ar:"مومباي",en:"Mumbai"},"DEL":{ar:"دلهي",en:"Delhi"},"AMD":{ar:"أحمداباد",en:"Ahmedabad"},
   "CCJ":{ar:"كاليكوت",en:"Kozhikode"},"COK":{ar:"كوتشي",en:"Kochi"},"MAA":{ar:"تشيناي",en:"Chennai"},
@@ -1762,7 +1762,7 @@ function _useFallbackData() {
   cityToIATA = {
     'alexandria':'HBE','cairo':'CAI','jeddah':'JED','riyadh':'RUH','dammam':'DMM',
     'madinah':'MED','medina':'MED','taif':'TIF','abha':'AHB','jazan':'GIZ','gizan':'GIZ',
-    'yanbu':'YNB','tabuk':'TUU','hail':'HAS','qassim':'ELQ','buraydah':'ELQ','sakaka':'HBT','hafr al-batin':'AQI','khamis mushait':'KMX','neom':'SHB','rijal almaa':'RAH','حائل':'HAS','القصيم':'ELQ','بريدة':'ELQ','سكاكا':'HBT','حفر الباطن':'AQI','خميس مشيط':'KMX','نيوم':'SHB','رجال ألمع':'RAH','sharjah':'SHJ','dubai':'DXB','abudhabi':'AUH',
+    'yanbu':'YNB','tabuk':'TUU','hail':'HAS','qassim':'ELQ','buraydah':'ELQ','sakaka':'HBT','hafr al-batin':'AQI','khamis mushait':'KMX','neom':'SHB','arar':'RAE','rafha':'RAH','حائل':'HAS','القصيم':'ELQ','بريدة':'ELQ','سكاكا':'HBT','حفر الباطن':'AQI','خميس مشيط':'KMX','نيوم':'SHB','عرعر':'RAE','رفحاء':'RAH','sharjah':'SHJ','dubai':'DXB','abudhabi':'AUH',
     'abu dhabi':'AUH','kuwait':'KWI','kuwait city':'KWI','doha':'DOH',
     'muscat':'MCT','salalah':'SLL','bahrain':'BAH','amman':'AMM','beirut':'BEY',
     'istanbul':'IST','mumbai':'BOM','delhi':'DEL','hyderabad':'HYD','chennai':'MAA',
@@ -1870,6 +1870,16 @@ function applyNoShowRule(airlineCode){
 const monthMapAr={'يناير':'JAN','فبراير':'FEB','مارس':'MAR','أبريل':'APR','مايو':'MAY','يونيو':'JUN','يوليو':'JUL','أغسطس':'AUG','سبتمبر':'SEP','أكتوبر':'OCT','نوفمبر':'NOV','ديسمبر':'DEC','شباط':'FEB','آذار':'MAR','نيسان':'APR','أيار':'MAY','حزيران':'JUN','تموز':'JUL','آب':'AUG','أيلول':'SEP','تشرين الأول':'OCT','تشرين الثاني':'NOV','كانون الأول':'DEC','كانون الثاني':'JAN'};
 const monthMapEn={'jan':'JAN','feb':'FEB','mar':'MAR','apr':'APR','may':'MAY','jun':'JUN','jul':'JUL','aug':'AUG','sep':'SEP','oct':'OCT','nov':'NOV','dec':'DEC','january':'JAN','february':'FEB','march':'MAR','april':'APR','june':'JUN','july':'JUL','august':'AUG','september':'SEP','october':'OCT','november':'NOV','december':'DEC'};
 const monthAr={'JAN':'يناير','FEB':'فبراير','MAR':'مارس','APR':'أبريل','MAY':'مايو','JUN':'يونيو','JUL':'يوليو','AUG':'أغسطس','SEP':'سبتمبر','OCT':'أكتوبر','NOV':'نوفمبر','DEC':'ديسمبر'};
+const weekdayAr=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const weekdayEn=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const _monthIdxOrder=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function getWeekdayName(day,mon,year,lang){
+  const monIdx=_monthIdxOrder.indexOf(String(mon||'').toUpperCase());
+  if(monIdx<0||!day||!year)return '';
+  const d=new Date(parseInt(year),monIdx,parseInt(day));
+  if(isNaN(d.getTime()))return '';
+  return lang==='ar'?weekdayAr[d.getDay()]:weekdayEn[d.getDay()];
+}
 
 // ══ FORMAT EXAMPLES ══
 const formats=[
@@ -2731,7 +2741,9 @@ function saveEdit(i){
   f.airlineAr=airDB[f.airlineCode]?.ar||f.airlineCode;f.airlineEn=airDB[f.airlineCode]?.en||f.airlineCode;
   f.dateAr=`${parseInt(f.day)} ${monthAr[f.mon]||f.mon} ${f.year}`;
   f.dateEn=`${parseInt(f.day)} ${f.mon} ${f.year}`;
-  editingIndex=-1;renderFlightChips(parsedFlightsData);
+  editingIndex=-1;
+  autoDetectTripType(parsedFlightsData); // إعادة تصنيف داخلي/دولي من قاعدة البيانات فقط
+  renderFlightChips(parsedFlightsData);
   // Lock the raw-text guard to the current textarea value so later
   // runAll() calls (e.g. typing the fare) don't re-parse and discard
   // this manual correction.
@@ -3161,10 +3173,10 @@ function buildOutputs(){
         const dE=to12En(f.time),aE=f.arrTime&&f.arrTime!=='??:??'?to12En(f.arrTime):'';
         let ar=`${f.fromAr} (${f.fromCode}) الى ${f.toAr} (${f.toCode})\n`;
         ar+=`${dA}${aA?' | وصول '+aA:''} | ${f.dateAr}\n`;
-        ar+=`🛫 ${f.airlineAr}${f.flightNum?' رحلة '+f.airlineCode+f.flightNum:''}\n`;
+        ar+=`${f.airlineAr}${f.flightNum?' رحلة '+f.airlineCode+f.flightNum:''}\n`;
         let en=`${f.fromEn} (${f.fromCode}) to ${f.toEn} (${f.toCode})\n`;
         en+=`${dE}${aE?' | Arrival '+aE:''} | ${f.dateEn}\n`;
-        en+=`🛫 ${f.airlineEn}${f.flightNum?' '+f.airlineCode+f.flightNum:''}\n`;
+        en+=`${f.airlineEn}${f.flightNum?' '+f.airlineCode+f.flightNum:''}\n`;
         return{ar,en};
       };
       const out=renderLeg(parsedFlightsData[0]);
@@ -3193,8 +3205,8 @@ function buildOutputs(){
           if(f.layoverAr)flightSummaryAr+=`   توقف في ${f.toAr}: ${f.layoverAr}\n`;
           if(f.layoverEn)flightSummaryEn+=`   Layover in ${f.toEn}: ${f.layoverEn}\n`;
         }else{
-          flightSummaryAr=`${f.fromAr} (${f.fromCode}) الى ${f.toAr} (${f.toCode})\n${dA}${aA?' | وصول '+aA:''} | ${f.dateAr}\n🛫 ${f.airlineAr}${f.flightNum?' رحلة '+f.airlineCode+f.flightNum:''}\n`;
-          flightSummaryEn=`${f.fromEn} (${f.fromCode}) to ${f.toEn} (${f.toCode})\n${dE}${aE?' | Arrival '+aE:''} | ${f.dateEn}\n🛫 ${f.airlineEn}${f.flightNum?' '+f.airlineCode+f.flightNum:''}\n`;
+          flightSummaryAr=`${f.fromAr} (${f.fromCode}) الى ${f.toAr} (${f.toCode})\n${dA}${aA?' | وصول '+aA:''} | ${f.dateAr}\n${f.airlineAr}${f.flightNum?' رحلة '+f.airlineCode+f.flightNum:''}\n`;
+          flightSummaryEn=`${f.fromEn} (${f.fromCode}) to ${f.toEn} (${f.toCode})\n${dE}${aE?' | Arrival '+aE:''} | ${f.dateEn}\n${f.airlineEn}${f.flightNum?' '+f.airlineCode+f.flightNum:''}\n`;
         }
       });
     }
@@ -3230,21 +3242,31 @@ function buildOutputs(){
   const isRoundTrip=parsedFlightsData.length===2 &&
     parsedFlightsData[0]._tripLeg==='outbound' && parsedFlightsData[1]._tripLeg==='inbound';
   const isMultiLeg=parsedFlightsData.length>1 && !isRoundTrip;
-  if(isRoundTrip){sAr+=`✈️ *رحلة ذهاب وعودة*\n\n`;sEn+=`✈️ *Round-Trip Flight*\n\n`;}
-  else if(isMultiLeg){sAr+=`✈️ *رحلة مع توقف — ${parsedFlightsData.length} مقاطع*\n\n`;sEn+=`✈️ *Connecting Flight — ${parsedFlightsData.length} Legs*\n\n`;}
+  if(isRoundTrip){sAr+=`*رحلة ذهاب وعودة*\n\n`;sEn+=`*Round-Trip Flight*\n\n`;}
+  else if(isMultiLeg){sAr+=`*رحلة مع توقف — ${parsedFlightsData.length} مقاطع*\n\n`;sEn+=`*Connecting Flight — ${parsedFlightsData.length} Legs*\n\n`;}
   parsedFlightsData.forEach((f,idx)=>{
     const dA=to12Ar(f.time),aA=f.arrTime&&f.arrTime!=='??:??'?to12Ar(f.arrTime):'';
     const dE=to12En(f.time),aE=f.arrTime&&f.arrTime!=='??:??'?to12En(f.arrTime):'';
+    const wdAr=getWeekdayName(f.day,f.mon,f.year,'ar');
+    const wdEn=getWeekdayName(f.day,f.mon,f.year,'en');
+    const typeLabelAr=isMultiLeg?(idx===parsedFlightsData.length-1?'الوصول النهائي':'رحلة مع توقف'):(f.stopover?'رحلة مع توقف':'رحلة مباشرة');
+    const typeLabelEn=isMultiLeg?(idx===parsedFlightsData.length-1?'Final Arrival':'Connecting'):(f.stopover?'Connecting Flight':'Direct Flight');
     if(isRoundTrip){
-      sAr+=idx===0?`*✈️ الذهاب:*\n`:`*↩️ العودة:*\n`;
-      sEn+=idx===0?`*✈️ Departing:*\n`:`*↩️ Return:*\n`;
-    } else if(isMultiLeg){sAr+=`*الجزء ${idx+1}:*\n`;sEn+=`*Leg ${idx+1}:*\n`;}
-    sAr+=`من *${f.fromAr} (${f.fromCode})* الى *${f.toAr} (${f.toCode})*\nوقت المغادرة: ${dA}${aA?' | وصول: '+aA:''} | *${f.dateAr}*\n*${isMultiLeg?(idx===parsedFlightsData.length-1?'الوصول النهائي':'رحلة مع توقف'):(f.stopover?'رحلة مع توقف':'رحلة مباشرة')}* ┃ (${f.airlineAr}${f.flightNum?' رحلة '+f.airlineCode+f.flightNum:''})\n`;
-    if(f.layoverAr)sAr+=`توقف في ${f.toAr}: ${f.layoverAr}\n`;
-    sAr+='\n';
-    sEn+=`From *${f.fromEn} (${f.fromCode})* to *${f.toEn} (${f.toCode})*\nDeparture: ${dE}${aE?' | Arrival: '+aE:''} | *${f.dateEn}*\n*${isMultiLeg?(idx===parsedFlightsData.length-1?'Final Arrival':'Connecting'):(f.stopover?'Connecting Flight':'Direct Flight')}* ┃ (${f.airlineEn}${f.flightNum?' '+f.airlineCode+f.flightNum:''})\n`;
-    if(f.layoverEn)sEn+=`Layover in ${f.toEn}: ${f.layoverEn}\n`;
-    sEn+='\n';
+      sAr+=idx===0?`*الذهاب:*\n\n`:`*العودة:*\n\n`;
+      sEn+=idx===0?`*Departing:*\n\n`:`*Return:*\n\n`;
+    } else if(isMultiLeg){sAr+=`*الجزء ${idx+1}:*\n\n`;sEn+=`*Leg ${idx+1}:*\n\n`;}
+    sAr+=`من *${f.fromAr} (${f.fromCode})* إلى *${f.toAr} (${f.toCode})*\n\n`;
+    sAr+=`وقت المغادرة: ${dA} *${wdAr?wdAr+' ':''}${f.dateAr}*\n\n`;
+    if(aA)sAr+=`موعد الوصول: ${aA}\n\n`;
+    sAr+=`*${typeLabelAr}*\n\n`;
+    if(f.layoverAr)sAr+=`توقف في ${f.toAr}: ${f.layoverAr}\n\n`;
+    sAr+=`(${f.airlineAr})\n\n`;
+    sEn+=`From *${f.fromEn} (${f.fromCode})* to *${f.toEn} (${f.toCode})*\n\n`;
+    sEn+=`Departure time: ${dE} *${wdEn?wdEn+' ':''}${f.dateEn}*\n\n`;
+    if(aE)sEn+=`Arrival time: ${aE}\n\n`;
+    sEn+=`*${typeLabelEn}*\n\n`;
+    if(f.layoverEn)sEn+=`Layover in ${f.toEn}: ${f.layoverEn}\n\n`;
+    sEn+=`(${f.airlineEn})\n\n`;
   });
   const legAr='برجاء العلم بأنه فى حال إتمام تعديل الرحلة على حجزك إلى رحلة أخرى قد يتم حذف جميع الخدمات الإضافية السابقة من جانب خط الطيران مثل ( المقاعد, الحقائب الإضافية,تأخير ذكي, الوجبات,رسوم اصدار بطاقه الصعود , الالغاء المجانى و التامين على الرحله,حماية الأمتعة), وفى حال تم حذفها سوف تحتاج إضافة اى من هذه الخدمات الإضافية مرة اخرى وسوف يتم دفع رسومها المعروضة من جانب خط الطيران إذا متاح إضافتها على الرحلة الجديدة.';
   const legEn='Please note that if you change your flight reservation to another flight, all additional services previously provided by the airline (such as seats, extra bags, smart delay, meals, boarding pass fees, free cancellation, flight insurance, and baggage protection) may be removed. If they are removed, you will need to add any of these additional services again, and the fees offered by the airline will be paid if they can be added to the new flight.';
@@ -3678,7 +3700,7 @@ function showWrongFlightPopup(){
         </div>
         <div class="wf-body">
           <ul class="wf-list">
-            <li><span class="wf-li-icon">🛫</span>
+            <li><span class="wf-li-icon"></span>
               <span>
                 <span data-ar><b>مطار الإقلاع والوصول</b> — مثل: CAI، JED، DXB</span>
                 <span data-en style="display:none;"><b>Departure &amp; arrival airports</b> — e.g. CAI, JED, DXB</span>
@@ -4139,10 +4161,10 @@ const _EMBEDDED_FLIGHT_DATA = {
       "country": "SA"
     },
     "RAE": {
-      "ar": "رفحاء",
-      "en": "Rafha",
-      "city_ar": "رفحاء",
-      "city_en": "Rafha",
+      "ar": "عرعر",
+      "en": "Arar",
+      "city_ar": "عرعر",
+      "city_en": "Arar",
       "country": "SA"
     },
     "WAE": {
@@ -5917,10 +5939,10 @@ const _EMBEDDED_FLIGHT_DATA = {
       "country": "SA"
     },
     "RAH": {
-      "ar": "رجال ألمع",
-      "en": "Rijal Almaa",
-      "city_ar": "رجال ألمع",
-      "city_en": "Rijal Almaa",
+      "ar": "رفحاء",
+      "en": "Rafha",
+      "city_ar": "رفحاء",
+      "city_en": "Rafha",
       "country": "SA"
     }
   },
@@ -7060,7 +7082,8 @@ const _EMBEDDED_FLIGHT_DATA = {
     "khamis mushayt": "KMX",
     "muhayil": "MJH",
     "neom": "SHB",
-    "rijal almaa": "RAH",
+    "arar": "RAE",
+    "rafha": "RAH",
     "حائل": "HAS",
     "القصيم": "ELQ",
     "بريدة": "ELQ",
@@ -7070,7 +7093,8 @@ const _EMBEDDED_FLIGHT_DATA = {
     "محايل": "MJH",
     "محايل عسير": "MJH",
     "نيوم": "SHB",
-    "رجال ألمع": "RAH"
+    "عرعر": "RAE",
+    "رفحاء": "RAH"
   },
   "saudiAirports": [
     "RUH",
@@ -7563,11 +7587,6 @@ window.copyBothQuotes = function(btn){
       if(typeof syncPaxFromInputs === 'function'){ try{ syncPaxFromInputs(); }catch(e){} }
     }
 
-    // Restore trip type (domestic/international button group).
-    if(data.tripTypeBtn && typeof setTripType === 'function'){
-      try{ setTripType(data.tripTypeBtn); }catch(e){}
-    }
-
     // Restore the previously parsed flight chips (skips re-parsing the
     // raw text — keeps any manual "Edit Flight" corrections the user made).
     if(Array.isArray(data.parsedFlightsData) && data.parsedFlightsData.length && typeof parsedFlightsData !== 'undefined'){
@@ -7578,9 +7597,19 @@ window.copyBothQuotes = function(btn){
         // re-run smartExtract() and wipe out the restored/edited flights.
         try{ _lastParsedRawText = document.getElementById('rawSeg')?.value.trim(); }catch(e){}
       }
+      // لا تستعيد نوع الرحلة (داخلية/دولية) من الجلسة القديمة المحفوظة —
+      // احسبه دائمًا من جديد اعتمادًا فقط على قاعدة البيانات (saudiAirports)
+      // بناءً على الرحلات المستعادة فعليًا، حتى لا يبقى تصنيف قديم/يدوي عالقًا.
+      if(typeof autoDetectTripType === 'function'){
+        try{ autoDetectTripType(parsedFlightsData); }catch(e){}
+      }
       if(typeof renderFlightChips === 'function') renderFlightChips(parsedFlightsData);
       if(typeof updateInputLocks === 'function') updateInputLocks();
       if(typeof updateExtractBtn === 'function') updateExtractBtn();
+    } else if(data.tripTypeBtn && typeof setTripType === 'function'){
+      // لا توجد رحلات محفوظة لإعادة اشتقاق النوع منها — استخدم آخر زر
+      // محفوظ فقط كحالة احتياطية (مثلاً بعد إعادة ضبط الرحلة يدويًا).
+      try{ setTripType(data.tripTypeBtn); }catch(e){}
     }
 
     // Re-run the full calculation pipeline with restored values so the
