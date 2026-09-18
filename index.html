@@ -3134,8 +3134,8 @@ function buildOutputs(){
   else{nsEnWord=(nsNum===1)?'hour':'hours';}
   const noAr=`الحجز سيصبح غير قابل للتعديل قبل موعد الإقلاع بـ ${nsVal} ${nsArWord}.`;
   const noEn=`Your booking will become non-changeable ${nsVal} ${nsEnWord} before the departure time.`;
-  const avAr='مع العلم أن السعر والإمكانية غير ثابتين.';
-  const avEn='Knowing that the price and availability are not guaranteed.';
+  const avAr='مع العلم أن السعر والإمكانية غير ثابتين.\nهل ترغب في إرسال رابط الدفع الآن لإتمام العملية؟ (يرجى العلم أن صلاحية الرابط 10 دقائق فقط).';
+  const avEn='Knowing that the price and availability are not guaranteed.\nWould you like us to send the payment link now to complete the process? (Please note that the link is valid for 10 minutes only).';
   const cAr=currAr(curr);
   const penaltyLineAr=penaltyVal!==null?`رسوم التعديل لشركة الطيران: ${(penaltyVal).toFixed(2)} ${cAr} للمسافر (إجمالي: ${penaltyAmt.toFixed(2)} ${cAr}).\n`:'';
   const fareDiffLineAr=fareDiffPerPax!==null?`فارق السعر للمسافر الواحد: ${fareDiffPerPax.toFixed(2)} ${cAr}.\n`:'';
@@ -3181,15 +3181,15 @@ function buildOutputs(){
       };
       const out=renderLeg(parsedFlightsData[0]);
       const ret=renderLeg(parsedFlightsData[1]);
-      flightSummaryAr=`✈️ رحلة الذهاب:\n${out.ar}\n✈️ رحلة العودة:\n${ret.ar}\n`;
-      flightSummaryEn=`✈️ Departing Flight:\n${out.en}\n✈️ Return Flight:\n${ret.en}\n`;
+      flightSummaryAr=`رحلة الذهاب:\n${out.ar}\nرحلة العودة:\n${ret.ar}\n`;
+      flightSummaryEn=`Departing Flight:\n${out.en}\nReturn Flight:\n${ret.en}\n`;
     } else {
       const isMulti=parsedFlightsData.length>1;
       // Check if it's a connecting journey (all legs connect)
       const isConnecting=isMulti && parsedFlightsData.every((f,i,a)=>i===0||a[i-1].toCode===f.fromCode);
       if(isConnecting && isMulti){
-        flightSummaryAr='✈️ رحلة مع توقف:\n';
-        flightSummaryEn='✈️ Connecting Flight:\n';
+        flightSummaryAr='رحلة مع توقف:\n';
+        flightSummaryEn='Connecting Flight:\n';
       } else if(isMulti){
         flightSummaryAr='تفاصيل الرحلات:\n';
         flightSummaryEn='Flight Details:\n';
@@ -3215,12 +3215,12 @@ function buildOutputs(){
 
   let qAr,qEn;
   if(trip==='domestic'){
-    qAr=`${paxNamesQuoteAr}${flightSummaryAr}${penaltyLineAr}${fareDiffLineAr}رسوم المسافر ${baseFee} ${cAr} لكل مسافر وبعد إضافة ضريبة القيمة المضافة ستصبح ${feePerPax.toFixed(2)} ${cAr} لكل مسافر.\n${adtLineAr}${chdLineAr}${infLineAr}\nإجمالي مبلغ التعديل المطلوب: ${grand.toFixed(2)} ${cAr}.\n${avAr}\n${noAr}`;
-    qEn=`${paxNamesQuoteEn}${flightSummaryEn}${penaltyLineEn}${fareDiffLineEn}Almosafer fees: ${baseFee} ${curr} per passenger and after adding VAT it will be ${feePerPax.toFixed(2)} ${curr} per passenger.\n${adtLineEn}${chdLineEn}${infLineEn}\nTotal amendment amount: ${grand.toFixed(2)} ${curr}.\n${avEn}\n${noEn}`;
+    qAr=`${paxNamesQuoteAr}${flightSummaryAr}${penaltyLineAr}${fareDiffLineAr}رسوم المسافر ${baseFee} ${cAr} لكل مسافر وبعد إضافة ضريبة القيمة المضافة ستصبح ${feePerPax.toFixed(2)} ${cAr} لكل مسافر.\n${adtLineAr}${chdLineAr}${infLineAr}\nإجمالي مبلغ التعديل المطلوب: ${grand.toFixed(2)} ${cAr}.\n${noAr}\n${avAr}`;
+    qEn=`${paxNamesQuoteEn}${flightSummaryEn}${penaltyLineEn}${fareDiffLineEn}Almosafer fees: ${baseFee} ${curr} per passenger and after adding VAT it will be ${feePerPax.toFixed(2)} ${curr} per passenger.\n${adtLineEn}${chdLineEn}${infLineEn}\nTotal amendment amount: ${grand.toFixed(2)} ${curr}.\n${noEn}\n${avEn}`;
   }else{
     const ppAr=pax>1?' لكل مسافر':'';const ppEn=pax>1?' per passenger':'';
-    qAr=`${paxNamesQuoteAr}${flightSummaryAr}${penaltyLineAr}${fareDiffLineAr}رسوم المسافر ${feePerPax.toFixed(2)} ${cAr}${ppAr}.\n${adtLineAr}${chdLineAr}${infLineAr}\nإجمالي مبلغ التعديل المطلوب: ${grand.toFixed(2)} ${cAr}.\n${avAr}\n${noAr}`;
-    qEn=`${paxNamesQuoteEn}${flightSummaryEn}${penaltyLineEn}${fareDiffLineEn}Almosafer fees: ${feePerPax.toFixed(2)} ${curr}${ppEn}.\n${adtLineEn}${chdLineEn}${infLineEn}\nTotal amendment amount: ${grand.toFixed(2)} ${curr}.\n${avEn}\n${noEn}`;
+    qAr=`${paxNamesQuoteAr}${flightSummaryAr}${penaltyLineAr}${fareDiffLineAr}رسوم المسافر ${feePerPax.toFixed(2)} ${cAr}${ppAr}.\n${adtLineAr}${chdLineAr}${infLineAr}\nإجمالي مبلغ التعديل المطلوب: ${grand.toFixed(2)} ${cAr}.\n${noAr}\n${avAr}`;
+    qEn=`${paxNamesQuoteEn}${flightSummaryEn}${penaltyLineEn}${fareDiffLineEn}Almosafer fees: ${feePerPax.toFixed(2)} ${curr}${ppEn}.\n${adtLineEn}${chdLineEn}${infLineEn}\nTotal amendment amount: ${grand.toFixed(2)} ${curr}.\n${noEn}\n${avEn}`;
   }
   document.getElementById('quoteAr').innerText=qAr;
   document.getElementById('quoteEn').innerText=qEn;
