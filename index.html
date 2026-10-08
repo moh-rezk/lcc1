@@ -2313,9 +2313,72 @@ function tryParseAirArabiaCompact(raw){
   return null;
 }
 
+// ══ BARE GDS SEGMENT LINES PARSER ══
+// Reads Amadeus-style segment lines (also the translator's "Internal GDS Text"):
+//   F3 156 Y 10OCT 6*JEDRUH HK1  0215 0400  10OCT  E
+//   F3 156 Y 10OCT 6JEDRUH HK1 0215 0400 10OCT E        (no star, single spaces)
+//   RJ 556 Q 08OCT 4 CMNAMM HK1  0530 1405  08OCT  E    (weekday digit separated by a space, or absent)
+// Purely additive: returns null unless at least one full line matches, so every other format is untouched.
+function tryParseGdsSegmentLines(raw){
+  if(!raw||!/\b\d{1,2}[A-Z]{3}(?:\d{2})?\b/.test(raw))return null;
+  const MON=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+  const now=new Date(),curYear=now.getFullYear(),curMon=now.getMonth();
+  const lineRe=/^[ \t]*(?:\d+[ \t]+)?([A-Z0-9]{2})[ \t]*(\d{1,4})[ \t]+([A-Z])[ \t]+(\d{1,2})([A-Z]{3})(\d{2})?[ \t]+(?:\d[ \t]*\*?[ \t]*)?([A-Z]{3})([A-Z]{3})[ \t]+[A-Z]{2}\d+[ \t]+(\d{4})[ \t]+(\d{4})(?:[ \t]+(\d{1,2})([A-Z]{3}))?/gm;
+  const okTime=t=>/^([01]\d|2[0-3])[0-5]\d$/.test(t);
+  const hmm=t=>t.slice(0,2)+':'+t.slice(2);
+  const yearFor=(mi,yy)=>yy?2000+parseInt(yy):(mi<curMon?curYear+1:curYear);
+  const hAr=h=>h===1?'\u0633\u0627\u0639\u0629':h===2?'\u0633\u0627\u0639\u062a\u0627\u0646':(h>=3&&h<=10)?h+' \u0633\u0627\u0639\u0627\u062a':h+' \u0633\u0627\u0639\u0629';
+  const flights=[],abs=[];
+  let m;
+  while((m=lineRe.exec(raw))!==null){
+    const al=m[1],num=m[2],dd=parseInt(m[4]),mon=m[5],yy=m[6],from=m[7],to=m[8],dep=m[9],arr=m[10];
+    const mi=MON.indexOf(mon);
+    if(mi<0||dd<1||dd>31||from===to||!okTime(dep)||!okTime(arr))continue;
+    const year=yearFor(mi,yy);
+    const day=String(dd).padStart(2,'0');
+    const depDay=Math.round(Date.UTC(year,mi,dd)/86400000);
+    let arrDay=depDay+(arr<dep?1:0);                      // overnight arrival
+    if(m[11]&&m[12]){                                      // explicit arrival date on the line wins
+      const ami=MON.indexOf(m[12]);
+      if(ami>=0){ const ay=(ami<mi)?year+1:year; arrDay=Math.round(Date.UTC(ay,ami,parseInt(m[11]))/86400000); }
+    }
+    abs.push({dep:depDay*1440+parseInt(dep.slice(0,2))*60+parseInt(dep.slice(2)),arr:arrDay*1440+parseInt(arr.slice(0,2))*60+parseInt(arr.slice(2))});
+    flights.push({
+      fromCode:from,toCode:to,
+      fromAr:(airportMap[from]||{}).ar||from,fromEn:(airportMap[from]||{}).en||from,
+      toAr:(airportMap[to]||{}).ar||to,toEn:(airportMap[to]||{}).en||to,
+      time:hmm(dep),arrTime:hmm(arr),day,mon,year:String(year),
+      dateAr:dd+' '+(monthAr[mon]||mon)+' '+year,dateEn:dd+' '+mon+' '+year,
+      airlineCode:al,flightNum:num,
+      airlineAr:(airDB[al]||{}).ar||al,airlineEn:(airDB[al]||{}).en||al,
+      terminal:'',arrTerminal:'',stopover:false,layoverAr:'',layoverEn:'',_tripLeg:''
+    });
+  }
+  if(!flights.length)return null;
+  // Round trip (A->B then B->A) is never a connection
+  const isRT=flights.length===2&&flights[0].fromCode===flights[1].toCode&&flights[0].toCode===flights[1].fromCode;
+  if(isRT){flights[0]._tripLeg='outbound';flights[1]._tripLeg='inbound';}
+  else{
+    for(let i=0;i<flights.length-1;i++){
+      const a=flights[i],b=flights[i+1];
+      if(a.toCode!==b.fromCode)continue;
+      const gap=abs[i+1].dep-abs[i].arr;
+      if(gap>0&&gap<=36*60){
+        const lh=Math.floor(gap/60),lm=gap%60;
+        a.layoverEn=lh>0&&lm>0?lh+'h '+lm+'m':lh>0?lh+'h':lm+'m';
+        a.layoverAr=lh>0&&lm>0?hAr(lh)+' \u0648'+lm+' \u062f\u0642\u064a\u0642\u0629':lh>0?hAr(lh):lm+' \u062f\u0642\u064a\u0642\u0629';
+        a.stopover=true;
+      }
+    }
+  }
+  return flights;
+}
+
 function smartExtract(text){
   const _aaResult = tryParseAirArabiaCompact(text.trim());
   if(_aaResult && _aaResult.length > 0) return _aaResult;
+  const _gdsLines = tryParseGdsSegmentLines(text);
+  if(_gdsLines && _gdsLines.length > 0) return _gdsLines;
   // Pre-normalize the whole text first
   const normText=normalizeText(text);
   let segs=[];
@@ -3798,34 +3861,62 @@ function maybeTriggerWrongFlightPopup(raw){
 }
 
 // ══ EXTRACT FLIGHT DATA ══
+function _buildExtractText(isAr){
+  const flights = parsedFlightsData;
+  const isRoundTrip = flights.length === 2 && flights[0]._tripLeg === 'outbound' && flights[1]._tripLeg === 'inbound';
+  const isMultiLeg = flights.length > 1 && !isRoundTrip;
+  // 12-hour time with صباحاً / مساءً (Arabic) or AM / PM (English)
+  const t12 = (t) => {
+    if(!t || t === '??:??') return '';
+    const [h, m] = t.split(':');
+    let hr = parseInt(h); const pm = hr >= 12;
+    if(hr === 0) hr = 12; else if(hr > 12) hr -= 12;
+    return isAr ? `${hr}:${m} ${pm ? 'مساءً' : 'صباحاً'}` : `${hr}:${m} ${pm ? 'PM' : 'AM'}`;
+  };
+  let lines = [];
+  if(isRoundTrip) lines.push(isAr ? '*رحلة ذهاب وعودة*' : '*Round-Trip Flight*', '');
+  else if(isMultiLeg) lines.push(isAr ? `*رحلة مع توقف — ${flights.length} مقاطع*` : `*Connecting Flight — ${flights.length} Legs*`, '');
+  flights.forEach((f, idx) => {
+    const wd = getWeekdayName(f.day, f.mon, f.year, isAr ? 'ar' : 'en');
+    const dep = t12(f.time), arr = t12(f.arrTime);
+    const dateStr = isAr ? f.dateAr : f.dateEn;
+    if(isRoundTrip) lines.push(isAr ? (idx === 0 ? '*الذهاب:*' : '*العودة:*') : (idx === 0 ? '*Departing:*' : '*Return:*'), '');
+    else if(isMultiLeg) lines.push(isAr ? `*الجزء ${idx+1}:*` : `*Leg ${idx+1}:*`, '');
+    if(isAr){
+      const typeLbl = isMultiLeg ? (idx === flights.length-1 ? 'الوصول النهائي' : 'رحلة مع توقف') : (f.stopover ? 'رحلة مع توقف' : 'رحلة مباشرة');
+      lines.push(`من *${f.fromAr||f.fromCode} (${f.fromCode})* إلى *${f.toAr||f.toCode} (${f.toCode})*`, '');
+      lines.push(`وقت المغادرة: ${dep} *${wd ? wd+' ' : ''}${dateStr}*`, '');
+      if(arr) lines.push(`موعد الوصول: ${arr}`, '');
+      lines.push(`*${typeLbl}*`, '');
+      if(f.layoverAr) lines.push(`توقف في ${f.toAr||f.toCode}: ${f.layoverAr}`, '');
+      lines.push(`(${f.airlineAr||f.airlineCode})`);
+    } else {
+      const typeLbl = isMultiLeg ? (idx === flights.length-1 ? 'Final Arrival' : 'Connecting') : (f.stopover ? 'Connecting Flight' : 'Direct Flight');
+      lines.push(`From *${f.fromEn||f.fromCode} (${f.fromCode})* to *${f.toEn||f.toCode} (${f.toCode})*`, '');
+      lines.push(`Departure time: ${dep} *${wd ? wd+' ' : ''}${dateStr}*`, '');
+      if(arr) lines.push(`Arrival time: ${arr}`, '');
+      lines.push(`*${typeLbl}*`, '');
+      if(f.layoverEn) lines.push(`Layover in ${f.toEn||f.toCode}: ${f.layoverEn}`, '');
+      lines.push(`(${f.airlineEn||f.airlineCode})`);
+    }
+    if(idx < flights.length - 1) lines.push('');
+  });
+  return lines.join('\n');
+}
+
 function extractFlightData(){
   if(!parsedFlightsData || !parsedFlightsData.length || !flightIsValid()) return;
-  const isAr = currentLang === 'ar';
-  let lines = [];
-  parsedFlightsData.forEach((f, i) => {
-    if(parsedFlightsData.length > 1){
-      lines.push(isAr ? `── رحلة ${i+1} ──` : `── Flight ${i+1} ──`);
-    }
-    const airline = isAr ? (f.airlineAr||f.airlineCode) : (f.airlineEn||f.airlineCode);
-    lines.push(`${f.airlineCode} ${f.flightNum}`);
-    lines.push(isAr ? `${f.fromAr||f.fromCode} ← ${f.toAr||f.toCode}` : `${f.fromCode} → ${f.toCode}`);
-    lines.push(`${parseInt(f.day)} ${f.mon} ${f.year}`);
-    lines.push(isAr ? `إقلاع: ${f.time}` : `DEP: ${f.time}`);
-    lines.push(isAr ? `وصول: ${f.arrTime}` : `ARR: ${f.arrTime}`);
-    if(f.terminal) lines.push(isAr ? `صالة الإقلاع: ${f.terminal}` : `DEP Terminal: ${f.terminal}`);
-    if(f.arrTerminal) lines.push(isAr ? `صالة الوصول: ${f.arrTerminal}` : `ARR Terminal: ${f.arrTerminal}`);
-    if(i < parsedFlightsData.length - 1) lines.push('');
-  });
-  const text = lines.join('\n');
+  const textAr = _buildExtractText(true);
+  const textEn = _buildExtractText(false);
 
-  // Show extract popup
   let modal = document.getElementById('extractModal');
   if(!modal){
     modal = document.createElement('div');
     modal.id = 'extractModal';
     modal.className = 'wf-overlay';
+    const boxCss = "cursor:text;user-select:all;max-height:230px;overflow-y:auto;font-size:12px;line-height:1.8;margin-bottom:8px;";
     modal.innerHTML = `
-      <div class="wf-box" style="max-width:400px;">
+      <div class="wf-box" style="max-width:480px;max-height:92vh;overflow-y:auto;">
         <div class="wf-header" style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8);">
           <span class="wf-icon">📤</span>
           <div class="wf-title">
@@ -3833,16 +3924,25 @@ function extractFlightData(){
             <span data-en style="display:none;">Extracted Flight Data</span>
           </div>
           <div class="wf-sub">
-            <span data-ar>جاهز للنسخ والمشاركة</span>
-            <span data-en style="display:none;">Ready to copy and share</span>
+            <span data-ar>عربي + إنجليزي — جاهز للنسخ والمشاركة</span>
+            <span data-en style="display:none;">Arabic + English — ready to copy and share</span>
           </div>
         </div>
         <div class="wf-body">
-          <div id="extractedText" class="wf-example" style="cursor:text;user-select:all;border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a5f;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:11px;font-weight:700;color:#166534;">🇸🇦 عربي</span>
+            <button class="copy-btn green" onclick="copyExtracted('extractedTextAr',this)">📋 نسخ العربي</button>
+          </div>
+          <div id="extractedTextAr" dir="rtl" class="wf-example" style="${boxCss}text-align:right;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;border:1px solid #bbf7d0;background:#f0fdf4;color:#14532d;"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+            <span style="font-size:11px;font-weight:700;color:#1d4ed8;">🇬🇧 English</span>
+            <button class="copy-btn primary" onclick="copyExtracted('extractedTextEn',this)">📋 Copy English</button>
+          </div>
+          <div id="extractedTextEn" dir="ltr" class="wf-example" style="${boxCss}text-align:left;font-family:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;border:1px solid #bfdbfe;background:#eff6ff;color:#1e3a5f;"></div>
           <div class="wf-btn-row">
-            <button class="wf-btn-close" style="background:var(--slate);" onclick="copyExtracted()">
-              <span data-ar>📋 نسخ البيانات</span>
-              <span data-en style="display:none;">📋 Copy Data</span>
+            <button class="wf-btn-close" style="background:var(--slate);" onclick="copyExtractedBoth(this)">
+              <span data-ar>📋 نسخ الاثنين</span>
+              <span data-en style="display:none;">📋 Copy Both</span>
             </button>
             <button class="wf-btn-clear" onclick="closeExtractModal()">
               <span data-ar>✖ إغلاق</span>
@@ -3853,7 +3953,8 @@ function extractFlightData(){
       </div>`;
     document.body.appendChild(modal);
   }
-  document.getElementById('extractedText').textContent = text;
+  document.getElementById('extractedTextAr').textContent = textAr;
+  document.getElementById('extractedTextEn').textContent = textEn;
   applyLangToPopup(modal);
   modal.style.display = 'flex';
   modal.style.animation = 'fadeInOverlay .25s ease';
@@ -3864,22 +3965,31 @@ function closeExtractModal(){
   if(m){ m.style.animation='fadeOutOverlay .2s ease forwards'; setTimeout(()=>{m.style.display='none';m.style.animation='';},200); }
 }
 
-function copyExtracted(){
-  const txt = document.getElementById('extractedText');
-  if(!txt) return;
-  navigator.clipboard.writeText(txt.textContent).then(()=>{
-    const btn = document.querySelector('#extractModal .wf-btn-close');
-    if(btn){
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<span>✅</span>';
-      setTimeout(()=>{ btn.innerHTML=orig; }, 1600);
-    }
-  }).catch(()=>{
-    // fallback
-    const r = document.createRange(); r.selectNode(txt);
-    window.getSelection().removeAllRanges(); window.getSelection().addRange(r);
-    document.execCommand('copy');
-  });
+function _flashBtn(btn){
+  if(!btn) return;
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span>✅</span>';
+  setTimeout(()=>{ btn.innerHTML = orig; }, 1600);
+}
+function _copyPlain(text, btn){
+  const done = ()=>_flashBtn(btn);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>{ _fallbackCopy(text); done(); });
+  } else { _fallbackCopy(text); done(); }
+}
+function _fallbackCopy(text){
+  const t = document.createElement('textarea');
+  t.value = text; document.body.appendChild(t); t.select();
+  document.execCommand('copy'); document.body.removeChild(t);
+}
+function copyExtracted(id, btn){
+  const el = document.getElementById(id);
+  if(el) _copyPlain(el.textContent, btn);
+}
+function copyExtractedBoth(btn){
+  const ar = (document.getElementById('extractedTextAr')||{}).textContent || '';
+  const en = (document.getElementById('extractedTextEn')||{}).textContent || '';
+  _copyPlain(ar + '\n\n――――――――――――――――――――\n\n' + en, btn);
 }
 
 // Update extract button state based on flight validity
